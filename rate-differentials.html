@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rate differentials</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --page:#eef0f1; --surf:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --mut:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --hair:rgba(11,11,11,.10); --hover:rgba(11,11,11,.045);
+  --neu:#f0efec; --pos:#2a78d6; --neg:#e34948; --ok:#006300; --warn-bg:#fff4d6; --warn-ink:#5a4100; --bad-bg:#fde8e8; --bad-ink:#7a1f1f;
+  --c-USD:#2a78d6; --c-EUR:#eb6834; --c-GBP:#1baf7a; --c-JPY:#eda100; --c-CHF:#e87ba4; --c-CAD:#008300; --c-AUD:#4a3aa7; --c-NZD:#e34948;
+  --p1:#2a78d6; --p2:#eb6834; --p3:#1baf7a;
+  --font: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --page:#0e1011; --surf:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --mut:#898781;
+    --grid:#2c2c2a; --axis:#383835; --hair:rgba(255,255,255,.10); --hover:rgba(255,255,255,.06);
+    --neu:#383835; --pos:#3987e5; --neg:#e66767; --ok:#0ca30c; --warn-bg:#3a2f0c; --warn-ink:#f3d98a; --bad-bg:#3b1a1a; --bad-ink:#f2b4b4;
+    --c-USD:#3987e5; --c-EUR:#d95926; --c-GBP:#199e70; --c-JPY:#c98500; --c-CHF:#d55181; --c-CAD:#008300; --c-AUD:#9085e9; --c-NZD:#e66767;
+    --p1:#3987e5; --p2:#d95926; --p3:#199e70;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0e1011; --surf:#1a1a19; --ink:#ffffff; --ink2:#c3c2b7; --mut:#898781;
+  --grid:#2c2c2a; --axis:#383835; --hair:rgba(255,255,255,.10); --hover:rgba(255,255,255,.06);
+  --neu:#383835; --pos:#3987e5; --neg:#e66767; --ok:#0ca30c; --warn-bg:#3a2f0c; --warn-ink:#f3d98a; --bad-bg:#3b1a1a; --bad-ink:#f2b4b4;
+  --c-USD:#3987e5; --c-EUR:#d95926; --c-GBP:#199e70; --c-JPY:#c98500; --c-CHF:#d55181; --c-CAD:#008300; --c-AUD:#9085e9; --c-NZD:#e66767;
+  --p1:#3987e5; --p2:#d95926; --p3:#199e70;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--ink);font:400 15px/1.5 var(--font);font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:32px 16px 72px}
+h1{font:700 clamp(30px,5vw,46px)/1.05 var(--font);letter-spacing:-.02em;margin:0 0 10px}
+h2{font:600 19px/1.25 var(--font);letter-spacing:-.005em;margin:0}
+.lede{margin:0;max-width:62ch;color:var(--ink2);font-size:16px}
+section{margin-top:40px}
+.sec-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:14px}
+.sec-head p{margin:4px 0 0;color:var(--ink2);font-size:14px;max-width:70ch}
+.card{background:var(--surf);border:1px solid var(--hair);border-radius:10px}
+a{color:inherit;text-decoration-color:var(--axis);text-underline-offset:3px}
+a:hover{text-decoration-color:currentColor}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+button{font:inherit;color:inherit}
+
+/* status + alerts */
+.status{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:18px;font-size:13px;color:var(--ink2)}
+.status span{display:inline-flex;align-items:center;gap:6px}
+.alert{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:14px;background:var(--warn-bg);color:var(--warn-ink)}
+.alert.bad{background:var(--bad-bg);color:var(--bad-ink)}
+.alert b{font-weight:600}
+
+/* tables */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+.dt th,.dt td{padding:10px 14px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--grid);font-size:14px}
+.dt th{font-weight:600;color:var(--ink2);font-size:13px;vertical-align:bottom}
+.dt th:first-child,.dt td:first-child{text-align:left}
+.dt td.l,.dt th.l{text-align:left}
+.dt tbody tr:last-child td{border-bottom:0}
+.dt tbody tr.pick{cursor:pointer}
+.dt tbody tr.pick:hover{background:var(--hover)}
+.dt tbody tr.on td:first-child{box-shadow:inset 3px 0 0 var(--k,var(--ink))}
+.dt th button{background:none;border:0;padding:0;font-weight:600;color:inherit;cursor:pointer;font-size:13px}
+.dt th button:hover{color:var(--ink)}
+.dt small{display:block;color:var(--ink2);font-size:12px;font-weight:400}
+.ccy{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.up{color:var(--ink)} .num-pos::before{content:"\25B2\00a0";font-size:10px} .num-neg::before{content:"\25BC\00a0";font-size:10px}
+.muted{color:var(--ink2)}
+.tag{display:inline-block;padding:1px 7px;border-radius:99px;border:1px solid var(--axis);font-size:12px;color:var(--ink2)}
+
+/* workspace */
+.ctrls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--axis);border-radius:8px;overflow:hidden;background:var(--surf)}
+.seg button{background:none;border:0;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--ink2)}
+.seg button+button{border-left:1px solid var(--axis)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surf);font-weight:600}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+select{font:inherit;font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--axis);background:var(--surf);color:var(--ink)}
+.ws{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:960px){.ws{grid-template-columns:minmax(0,1fr)}}
+.board{padding:14px 14px 12px}
+.board h3,.chartcard h3{font:600 14px/1.3 var(--font);margin:0 0 2px}
+.board p.hint{margin:0 0 10px;font-size:13px;color:var(--ink2)}
+.mx{table-layout:fixed;border-collapse:separate;border-spacing:2px}
+.mx th{font-size:12px;font-weight:600;color:var(--ink2);padding:2px 0;text-align:center;white-space:nowrap}
+.mx th.r{text-align:right;padding-right:6px;width:50px}
+.mx td{padding:0;height:42px}
+.mx td.na{background:transparent}
+.mx .cell{position:relative;width:100%;height:100%;border:0;border-radius:5px;cursor:pointer;font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums}
+.mx .cell:hover{box-shadow:0 0 0 2px var(--axis)}
+.mx .cell.sel{box-shadow:0 0 0 2px var(--ink);font-weight:700}
+.mx .cell .pk{position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:50%;background:var(--pk)}
+.mx .dot{width:8px;height:8px;margin-right:4px}
+@media(max-width:520px){.mx th{font-size:10.5px}.mx .dot{display:none}.mx th.r{width:34px}}
+.tctl{margin:0 0 12px;padding:10px 0 2px;border-top:1px solid var(--grid)}
+.tctl .seg button{padding:5px 11px}
+.tctl input[type=range]{width:100%;margin:12px 0 2px;accent-color:var(--ink)}
+.asofl{font-size:13px;color:var(--ink2);min-height:38px}
+.asofl b{color:var(--ink);font-weight:600}
+.cardhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin-bottom:6px}
+.cardhead h3{margin:0}
+details.setup{margin:8px 4px 2px;font-size:13px;color:var(--ink2)}
+details.setup summary{cursor:pointer;color:var(--ink)}
+details.setup ol{margin:8px 0 4px 18px;padding:0}
+details.setup code{font-size:12px;background:var(--hover);padding:1px 5px;border-radius:4px}
+.legend-inline{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--ink2);margin:6px 4px 0}
+.legend-inline svg{vertical-align:-3px;margin-right:4px}
+.stack{margin-top:16px}
+.notices{padding:16px 16px 6px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 28px}
+@media(max-width:900px){.notices{grid-template-columns:minmax(0,1fr)}}
+.notices h3{font:700 15px/1.3 var(--font);margin:0 0 6px}
+.notices ul{list-style:none;margin:0 0 12px;padding:0}
+.notices li{padding:7px 0;border-top:1px solid var(--grid);font-size:14px;line-height:1.4}
+.notices li small{display:block;color:var(--ink2);font-size:12.5px}
+.notices .quiet{color:var(--ink2);font-size:14px;padding:7px 0;border-top:1px solid var(--grid)}
+.plink{background:none;border:0;padding:0;font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--axis);text-underline-offset:3px}
+.plink:hover{text-decoration-color:currentColor}
+.newtag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:99px;background:var(--ink);color:var(--surf);font-size:11px;font-weight:700;vertical-align:1px}
+input[type=date]{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid var(--axis);background:var(--surf);color:var(--ink)}
+.mx .cell .bz{position:absolute;top:2px;right:4px;font-size:11px;line-height:1}
+.biaskey{margin-top:8px;font-size:12px;color:var(--ink2);line-height:1.5}
+.biascheck{margin:6px 0 0;font-size:12.5px;color:var(--ink2)}
+.btag{font-weight:700;color:var(--ink)}
+details.terms{margin:20px 0 0;padding:12px 16px}
+details.terms summary{cursor:pointer;font-weight:600;font-size:15px}
+details.terms dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 28px;margin:12px 0 2px}
+@media(max-width:760px){details.terms dl{grid-template-columns:minmax(0,1fr)}}
+details.terms dt{font-weight:600;font-size:14px}
+details.terms dd{margin:2px 0 0;color:var(--ink2);font-size:13.5px}
+.sqhead{display:flex;flex-wrap:wrap;gap:6px 28px;align-items:baseline;margin:0 0 14px;font-size:15px}
+.sqhead b{font-weight:700}
+.sqgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(max-width:760px){.sqgrid{grid-template-columns:minmax(0,1fr)}}
+.sqcol{padding:14px 14px 8px}
+.sqcol h3{font:700 16px/1.3 var(--font);margin:0}
+.sqcol .hint{margin:2px 0 8px;font-size:13px;color:var(--ink2)}
+.sqrow{display:grid;grid-template-columns:76px minmax(0,1fr) 52px;gap:2px 10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--grid);padding:8px 2px;cursor:pointer;border-radius:0}
+.sqrow:hover{background:var(--hover)}
+.sqrow .sqp{font-weight:600;font-size:14px}
+.sqrow .sqbar{height:14px;background:var(--grid);border-radius:3px;overflow:hidden}
+.sqrow .sqbar i{display:block;height:100%;border-radius:3px;background:var(--bar)}
+.sqrow .sqd{text-align:right;font-weight:600;font-size:14px}
+.sqrow small{grid-column:2/4;color:var(--ink2);font-size:12px;line-height:1.3}
+.sqcol.sq{--bar:var(--p2)} .sqcol.ex{--bar:var(--p3)}
+.sqnone{padding:14px 2px;color:var(--ink2);font-size:14px}
+.legendbar{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--ink2)}
+.legendbar i{flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--neg),var(--neu),var(--pos))}
+.chartcard{padding:14px 14px 10px;position:relative}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px;min-height:30px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--axis);border-radius:99px;padding:3px 6px 3px 10px;font-size:13px;background:var(--surf);cursor:pointer}
+.chip.focus{border-color:var(--ink);font-weight:600}
+.chip .sw{width:14px;height:3px;border-radius:2px;background:var(--k)}
+.chip .x{border:0;background:none;cursor:pointer;color:var(--ink2);font-size:15px;line-height:1;padding:0 4px;border-radius:50%}
+.chip .x:hover{color:var(--ink)}
+.chip.ccy-chip{padding:3px 12px 3px 10px}
+.chip.off{opacity:.45}
+.chip.off .sw{background:var(--axis)}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--font);fill:var(--ink2);font-size:12px}
+.chart .ptitle{font-size:12px;font-weight:600;fill:var(--ink)}
+.chart .lbl{font-weight:600}
+.tip{position:absolute;pointer-events:none;z-index:5;background:var(--surf);border:1px solid var(--axis);border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.45;box-shadow:0 4px 18px rgba(0,0,0,.14);min-width:150px;max-width:260px}
+.tip b{font-weight:600}
+.tip .row{display:flex;justify-content:space-between;gap:14px}
+.tip .sw{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--k)}
+.tip hr{border:0;border-top:1px solid var(--grid);margin:6px 0}
+.empty{margin:20px 0;color:var(--ink2);font-size:14px}
+.empty button{margin-left:8px;border:1px solid var(--axis);background:var(--surf);border-radius:8px;padding:4px 10px;cursor:pointer}
+.note{font-size:13px;color:var(--ink2);margin:10px 4px 0;max-width:80ch}
+.spark{display:block}
+.reading{display:inline-flex;gap:6px;align-items:center}
+footer{margin-top:48px;font-size:13px;color:var(--ink2);max-width:80ch}
+.ok{color:var(--ok);font-weight:600}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<header>
+  <h1>Rate differentials</h1>
+  <p class="lede">Policy rates of the eight central banks behind the major pairs, every decision since January 2025, and how all 28 pairs moved around them.</p>
+  <div class="status" id="status"></div>
+  <div id="alerts"></div>
+</header>
+
+<section id="notices">
+  <div class="sec-head"><div><h2>What changed lately</h2><p>Rate decisions and direction changes from the last 30 days, and the decisions due in the next 30. Click a pair to chart it.</p></div></div>
+  <div class="card notices" id="nBoard"></div>
+</section>
+
+<details class="card terms">
+  <summary>Quick guide to the terms</summary>
+  <dl>
+    <div><dt>Interest rate differential</dt><dd>One currency's policy rate minus the other's, in percentage points. It is not a price gap. EUR/USD today: 2.50 (ECB) minus 3.88 (Fed) = −1.38.</dd></div>
+    <div><dt>Base and quote</dt><dd>In EUR/USD, EUR is the base (first) and USD is the quote (second). The differential is always base minus quote.</dd></div>
+    <div><dt>Positive or negative</dt><dd>Positive: the base pays more. Negative: the quote pays more. Blue and red on the board.</dd></div>
+    <div><dt>Expanding</dt><dd>The differential got bigger than it was at the start of the period. The two rates moved apart.</dd></div>
+    <div><dt>Contracting (squeezing)</dt><dd>The differential got smaller. The two rates moved closer together.</dd></div>
+    <div><dt>Rate bias</dt><dd>Which way the differential leans. Bullish: the base pays more, so buying the pair earns carry. Bearish: the quote pays more. It reads rates only. It is not a price forecast.</dd></div>
+    <div><dt>Fading</dt><dd>The bias still points one way but the differential is contracting, so the reason is weakening. Shown as a hollow arrow.</dd></div>
+    <div><dt>Carry</dt><dd>Earning the differential by holding the higher-rate currency. A contracting differential shrinks that reward.</dd></div>
+    <div><dt>bp (basis point)</dt><dd>0.01 of a percentage point. A 25 bp move is a quarter point.</dd></div>
+    <div><dt>Cut, hike, hold</dt><dd>A central bank lowers, raises or leaves its policy rate at a scheduled decision.</dd></div>
+    <div><dt>With rates or against rates</dt><dd>Whether the pair's price moved the way the change in differential would suggest, or the opposite way.</dd></div>
+    <div><dt>Board date</dt><dd>The date the pair board is showing. Set it with the slider or the preset buttons.</dd></div>
+  </dl>
+</details>
+
+<section id="workspace">
+  <div class="sec-head">
+    <div><h2>Pairs against the rate differential</h2><p>Pick up to three pairs on the board. Each cell shows the differential (base rate minus quote rate) and the rate bias: ▲ bullish, ▼ bearish. Lines on the charts mark every decision by either bank.</p></div>
+    <div class="ctrls">
+      <label class="muted" style="font-size:13px">Window <select id="win"></select></label>
+      <div class="seg" id="modeSeg" role="group" aria-label="Price scale"><button data-m="idx" aria-pressed="true">Indexed</button><button data-m="px" aria-pressed="false">Price</button></div>
+    </div>
+  </div>
+  <div class="ws">
+    <div class="card board">
+      <h3>Pair board</h3>
+      <p class="hint">Each cell is base minus quote, in percentage points. Click to add or remove a pair.</p>
+      <div class="tctl">
+        <div class="seg" id="asofSeg" role="group" aria-label="Board date presets"><button data-a="jan25">Jan 2025</button><button data-a="jan26">Jan 2026</button><button data-a="now" aria-pressed="true">Now</button></div>
+        <input type="range" id="asof" min="0" max="1" step="1" value="1" aria-label="Board date, one step per rate decision">
+        <div class="asofl" id="asofLbl"></div>
+      </div>
+      <div id="matrix"></div>
+      <div class="legendbar"><span>Quote pays more</span><i></i><span>Base pays more</span></div>
+      <div class="biaskey"><b>Rate bias</b> ▲ bullish (buy the pair), ▼ bearish (sell the pair). Hollow △ ▽ means the differential is contracting, so the bias is fading. No arrow means neutral.</div>
+      <p class="biascheck" id="biasCheck"></p>
+    </div>
+    <div class="card chartcard">
+      <div class="cardhead"><h3>Daily candles</h3><label class="muted" style="font-size:13px">Pair <select id="cPair"></select></label></div>
+      <div class="chart" id="candleChart" role="img" aria-label="Daily candlestick chart of the focused pair with its rate differential underneath and rate decisions marked"></div>
+      <div class="legend-inline" id="candleKey"></div>
+      <p class="note" id="cSrc" style="margin-top:6px"></p>
+      <details class="setup"><summary>Connect a broker feed</summary>
+        <ol>
+          <li>Pick a feed: <code>fusion-ctrader-worker.js</code> (your Fusion Markets cTrader account) or <code>oanda-candles-worker.js</code> (free OANDA practice account). The setup steps are at the top of each file.</li>
+          <li>Deploy it as a Cloudflare Worker with the secrets it lists. Tokens never reach the browser.</li>
+          <li>Set <code>RD_CONFIG.oandaProxy</code> to the Worker URL. For Fusion also set <code>RD_CONFIG.candleLabel</code> to <code>'Fusion Markets cTrader bid prices'</code>.</li>
+        </ol>
+        MetaTrader (MT4 or MT5) has no direct route; it needs a paid third-party relay, so the cTrader feed is the way to use your Fusion account.
+      </details>
+    </div>
+  </div>
+  <div class="card chartcard stack">
+    <div class="chips" id="pairChips"></div>
+    <div class="chart" id="pairChart" role="img" aria-label="Price of the selected pairs with the rate differential underneath, and rate decisions marked"></div>
+  </div>
+</section>
+
+<section id="squeeze">
+  <div class="sec-head">
+    <div><h2>Differentials: contracting and expanding</h2><p>The interest rate differential is one currency's rate minus the other's. Here it is measured as a size, ignoring which side pays more. Contracting (squeezing) means the rates moved closer together over the period. Expanding means they moved apart. Click a pair to chart it below.</p></div>
+    <div class="ctrls"><div class="seg" id="sqSeg" role="group" aria-label="Period"></div>
+      <label class="muted" style="font-size:13px">Since <input type="date" id="sinceDate" aria-label="Start date"></label>
+      <select id="sinceEv" aria-label="Start from a rate decision"></select></div>
+  </div>
+  <div class="sqhead" id="sqHead"></div>
+  <div class="sqgrid">
+    <div class="card sqcol sq"><h3>&#9664; Contracting</h3><p class="hint">Differential getting smaller. Biggest first.</p><div id="sqList"></div></div>
+    <div class="card sqcol ex"><h3>Expanding &#9654;</h3><p class="hint">Differential getting bigger. Biggest first.</p><div id="exList"></div></div>
+  </div>
+  <p class="note" id="sqFlat"></p>
+</section>
+
+<section id="rates">
+  <div class="sec-head">
+    <div><h2>Policy rates</h2><p>Where each rate stands, what it has done since January 2025, and the next scheduled decision.</p></div>
+  </div>
+  <div class="card tablewrap"><table class="dt" id="rateTable"></table></div>
+</section>
+
+
+
+<section id="events">
+  <div class="sec-head">
+    <div><h2>Around each decision</h2><p id="evSub"></p></div>
+  </div>
+  <div class="card tablewrap"><table class="dt" id="evTable"></table></div>
+  <p class="note">Price moves are measured from the daily ECB reference fixing on the decision date. That fixing is at 14:15 CET, so decisions announced later in the day (the Fed, BoC) mostly show up in the next day's number, and short windows are noisy. Read the 20-day column with that in mind.</p>
+</section>
+
+<section id="ranking">
+  <div class="sec-head">
+    <div><h2>All 28 pairs</h2><p id="rankSub"></p></div>
+  </div>
+  <div class="card tablewrap"><table class="dt" id="rankTable"></table></div>
+</section>
+
+<section id="paths">
+  <div class="sec-head">
+    <div><h2>Policy rate paths</h2><p>Each line steps on the day of a decision. Turn currencies on and off to compare.</p></div>
+  </div>
+  <div class="card chartcard">
+    <div class="chips" id="ccyChips"></div>
+    <div class="chart" id="pathChart" role="img" aria-label="Step chart of the eight policy rates since January 2025"></div>
+  </div>
+</section>
+
+<section id="sources">
+  <div class="sec-head">
+    <div><h2>Sources and checks</h2><p>The rate history is a verified table taken from each central bank's own release. Where a bank publishes a free data feed, the page re-checks the table against it every time it loads.</p></div>
+  </div>
+  <div class="card tablewrap"><table class="dt" id="srcTable"></table></div>
+  <p class="note">Spot rates are the daily ECB reference rates from Frankfurter, so each day is one fixing, not live ticks. Rates only change at scheduled decisions, so the table needs updating after each meeting. If a meeting date has passed and the table has not been re-verified, a notice appears at the top of the page.</p>
+</section>
+
+<footer>
+  Conventions: the Fed is the midpoint of its target range, the ECB is the deposit facility rate, the BoJ is the overnight call rate target. Decision dates are announcement dates. The ECB and RBA apply changes a few days later, and the Fed and RBA table dates are effective dates.
+</footer>
+
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const MINUS='−';
+const D=s=>Date.parse(s+'T00:00:00Z');
+const MS=864e5;
+const fmtD=(t,o)=>new Date(t).toLocaleDateString('en-GB',Object.assign({timeZone:'UTC',day:'numeric',month:'short',year:'numeric'},o||{}));
+const sg=(v,dp)=>{dp=dp==null?2:dp;const r=+v.toFixed(dp);return (r>0?'+':r<0?MINUS:'')+Math.abs(r).toFixed(dp)};
+const pct=v=>sg(v,1)+'%';
+const TODAY=new Date().toISOString().slice(0,10);
+let VERIFIED='2026-10-01',RATES_SRC='';
+const SINCE='2025-01-01';
+const ORDER=['EUR','GBP','AUD','NZD','USD','CAD','CHF','JPY'];
+const SYM='EUR,JPY,GBP,CHF,CAD,AUD,NZD';
+
+/* ---------- verified rate history (decision date, new rate, effective date if different) ---------- */
+const CC={
+USD:{code:'Fed',bank:'Federal Reserve',name:'US dollar',what:'target range midpoint',start:4.375,
+  ev:[['2025-09-17',4.125,'2025-09-18'],['2025-10-29',3.875,'2025-10-30'],['2025-12-10',3.625,'2025-12-11'],['2026-09-16',3.875,'2026-09-17']],
+  next:'2026-10-28',src:'https://www.federalreserve.gov/monetarypolicy/openmarket.htm',srcName:'Federal Reserve, policy tools',
+  verif:'Every date matches the Fed table. It lists effective dates, the decision is the day before.'},
+EUR:{code:'ECB',bank:'European Central Bank',name:'Euro',what:'deposit facility',start:3.00,
+  ev:[['2025-01-30',2.75,'2025-02-05'],['2025-03-06',2.50,'2025-03-12'],['2025-04-17',2.25,'2025-04-23'],['2025-06-05',2.00,'2025-06-11'],['2026-06-11',2.25,'2026-06-17'],['2026-09-10',2.50,'2026-09-16']],
+  next:'2026-10-29',src:'https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html',srcName:'ECB, key interest rates',
+  verif:'Every level and effective date matches the ECB table. Decisions land six days before they take effect.'},
+GBP:{code:'BoE',bank:'Bank of England',name:'Pound',what:'Bank Rate',start:4.75,
+  ev:[['2025-02-06',4.50],['2025-05-08',4.25],['2025-08-07',4.00],['2025-12-18',3.75]],
+  next:'2026-11-05',src:'https://www.bankofengland.co.uk/boeapps/database/Bank-Rate.asp',srcName:'Bank of England, Bank Rate history',
+  verif:'Every date matches the Bank Rate history. Six holds in 2026 so far.'},
+JPY:{code:'BoJ',bank:'Bank of Japan',name:'Yen',what:'overnight call rate',start:0.25,
+  ev:[['2025-01-24',0.50],['2025-12-19',0.75],['2026-06-16',1.00],['2026-09-18',1.25,'2026-09-24']],
+  next:'2026-10-30',src:'https://www.boj.or.jp/en/mopo/mpmdeci/mpr_2026/index.htm',srcName:'Bank of Japan, monetary policy releases',
+  verif:'Sep 2026 checked against the BoJ statement, Dec 2025 and Jun 2026 against press and data providers. The Jan 2025 hike was not re-checked on the BoJ site.'},
+CHF:{code:'SNB',bank:'Swiss National Bank',name:'Franc',what:'SNB policy rate',start:0.50,
+  ev:[['2025-03-20',0.25],['2025-06-19',0.00]],
+  next:'2026-12-10',src:'https://www.snb.ch/en/the-snb/mandates-goals/monetary-policy/decisions',srcName:'SNB, monetary policy decisions',
+  verif:'Decision dates match the SNB list. The 0% level and the hold at every meeting since come from SNB releases and press.'},
+CAD:{code:'BoC',bank:'Bank of Canada',name:'Canadian dollar',what:'overnight rate target',start:3.25,
+  ev:[['2025-01-29',3.00],['2025-03-12',2.75],['2025-09-17',2.50],['2025-10-29',2.25]],
+  next:'2026-10-28',src:'https://www.bankofcanada.ca/core-functions/monetary-policy/key-interest-rate/',srcName:'Bank of Canada, key interest rate',
+  verif:'Oct 2025 cut and seven straight holds confirmed. Earlier 2025 steps are checked against the Bank of Canada data feed on every load.'},
+AUD:{code:'RBA',bank:'Reserve Bank of Australia',name:'Australian dollar',what:'cash rate target',start:4.35,
+  ev:[['2025-02-18',4.10,'2025-02-19'],['2025-05-20',3.85,'2025-05-21'],['2025-08-12',3.60,'2025-08-13'],['2026-02-03',3.85,'2026-02-04'],['2026-03-17',4.10,'2026-03-18'],['2026-05-05',4.35,'2026-05-06'],['2026-09-29',4.60,'2026-09-30']],
+  next:'2026-11-03',src:'https://www.rba.gov.au/statistics/cash-rate/',srcName:'RBA, cash rate target',
+  verif:'Feb and May 2025 match the RBA table. The Aug 2025 cut and the four 2026 hikes come from RBA statements and press.'},
+NZD:{code:'RBNZ',bank:'Reserve Bank of New Zealand',name:'NZ dollar',what:'official cash rate',start:4.25,
+  ev:[['2025-02-19',3.75],['2025-04-09',3.50],['2025-05-28',3.25],['2025-08-20',3.00],['2025-10-08',2.50],['2025-11-26',2.25],['2026-07-08',2.50],['2026-09-02',2.75]],
+  next:'2026-10-28',src:'https://www.rbnz.govt.nz/monetary-policy/about-monetary-policy/the-official-cash-rate',srcName:'RBNZ, official cash rate',
+  verif:'Sep 2026 confirmed on the RBNZ site. Other dates come from RBNZ-linked news reports and a rate-history table.'}
+};
+const CFG=Object.assign({oandaProxy:'',candleLabel:'OANDA mid prices',ratesUrl:'https://raw.githubusercontent.com/Ankyra1/ankyra-rates/main/rates.json'},window.RD_CONFIG||{});
+const EVENTS=[],ASTEPS=[];
+function buildRates(){
+  EVENTS.length=0;
+  ORDER.forEach(c=>{const x=CC[c];let prev=x.start;x.steps=[{t:D(SINCE),v:x.start}];
+    x.ev.forEach(e=>{const t=D(e[0]);x.steps.push({t,v:e[1]});EVENTS.push({c,d:e[0],t,eff:e[2]||null,from:prev,to:e[1],bp:Math.round((e[1]-prev)*100)});prev=e[1]});
+    x.now=prev;});
+  EVENTS.sort((a,b)=>a.t-b.t);
+  ASTEPS.length=0;ASTEPS.push(D(SINCE),...new Set(EVENTS.map(e=>e.t)));
+}
+buildRates();
+/* rates.json overrides the embedded table when it is valid and not older. A scheduled check keeps that file current. */
+async function loadRates(){
+  const okShape=j=>{
+    if(!j||typeof j.verified!=='string'||!j.banks)return false;
+    for(const c of ORDER){const b=j.banks[c];if(!b||typeof b.start!=='number'||!Array.isArray(b.ev)||!/^\d{4}-\d\d-\d\d$/.test(b.next||''))return false;
+      let last='';for(const e of b.ev){if(!/^\d{4}-\d\d-\d\d$/.test(e[0])||typeof e[1]!=='number'||e[0]<=last)return false;last=e[0]}}
+    return true};
+  let best=null,from='';
+  for(const u of [...new Set([CFG.ratesUrl,'rates.json'].filter(Boolean))]){
+    try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)continue;const j=await r.json();
+      if(okShape(j)&&j.verified>=VERIFIED&&(!best||j.verified>best.verified)){best=j;from=u}}catch(e){}
+  }
+  if(!best)return false;
+  for(const c of ORDER){const b=best.banks[c];CC[c].start=b.start;CC[c].ev=b.ev;CC[c].next=b.next;CC[c].nextNote=b.nextNote||'';if(b.verif)CC[c].verif=b.verif}
+  VERIFIED=best.verified;RATES_SRC=from.replace(/^https?:\/\//,'').split('/')[0]||from;buildRates();return true;
+}
+function rateAt(c,t){const s=CC[c].steps;let v=s[0].v;for(let i=0;i<s.length&&s[i].t<=t;i++)v=s[i].v;return v}
+const rateNow=c=>CC[c].now;
+const ra=c=>state.asof==null?rateNow(c):rateAt(c,state.asof);
+const PAIRS=[];for(let i=0;i<ORDER.length;i++)for(let j=i+1;j<ORDER.length;j++)PAIRS.push(ORDER[i]+'/'+ORDER[j]);
+
+/* ---------- state ---------- */
+const state={sel:['EUR/USD','USD/JPY'],slot:{'EUR/USD':1,'USD/JPY':2},focus:'EUR/USD',win:'m6',mode:'idx',ccyOn:new Set(ORDER),since:'',asof:null,sort:{k:'adiff',dir:-1}};
+let FX=null, FXSRC='', FXERR=false;
+const CHECK={};const OHLC={};
+const WINS={m1:{label:'Last month',from:()=>new Date(Date.now()-30*MS).toISOString().slice(0,10)},m10:{label:'Last 10 months',from:()=>new Date(Date.now()-304*MS).toISOString().slice(0,10)},custom:{get label(){return 'Since '+fmtD(D(state.since))},from:()=>state.since||SINCE},all:{label:'Since Jan 2025',from:()=>SINCE},ytd:{label:'2026 so far',from:()=>'2026-01-01'},m6:{label:'Last 6 months',from:()=>new Date(Date.now()-182*MS).toISOString().slice(0,10)},m3:{label:'Last 90 days',from:()=>new Date(Date.now()-90*MS).toISOString().slice(0,10)}};
+
+/* ---------- helpers ---------- */
+function cssHex(n){const v=getComputedStyle(document.documentElement).getPropertyValue(n).trim();return hexRGB(v)}
+function hexRGB(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16))}
+function mix(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t))}
+function lum(c){const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2])}
+function ticks(min,max,n){const span=(max-min)||1;const s0=span/n;const mag=Math.pow(10,Math.floor(Math.log10(s0)));const f=s0/mag;const step=(f<1.5?1:f<3?2:f<7?5:10)*mag;const lo=Math.floor(min/step+1e-9)*step,hi=Math.ceil(max/step-1e-9)*step;const o=[];for(let v=lo;v<=hi+step/2;v+=step)o.push(+v.toFixed(10));return o}
+function xTicks(t0,t1,w){const span=(t1-t0)/MS;const per=Math.max(1,Math.ceil((span/30)/Math.max(2,Math.floor(w/64))));const k=[1,2,3,6,12].find(v=>v>=per)||12;const out=[];const d0=new Date(t0);let y=d0.getUTCFullYear(),m=d0.getUTCMonth();if(d0.getUTCDate()>1)m++;
+  m=Math.ceil(m/k)*k;for(;;m+=k){const t=Date.UTC(y,m,1);if(t>t1)break;if(t>=t0)out.push(t)}return out}
+const fmtM=t=>new Date(t).toLocaleDateString('en-GB',{timeZone:'UTC',month:'short',year:'2-digit'});
+function pxDp(v){return v>=50?2:v>=5?3:4}
+function line(pts){return pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join('')}
+function declutter(items,gap,lo,hi){items.sort((a,b)=>a.y-b.y);for(let i=1;i<items.length;i++)if(items[i].y-items[i-1].y<gap)items[i].y=items[i-1].y+gap;
+  const over=items.length?items[items.length-1].y-hi:0;if(over>0)items.forEach(it=>it.y-=over);for(let i=items.length-2;i>=0;i--)if(items[i+1].y-items[i].y<gap)items[i].y=items[i+1].y-gap;
+  items.forEach(it=>{if(it.y<lo)it.y=lo});return items}
+const slotVar=k=>'var(--p'+k+')';
+const evText=e=>`${CC[e.c].code} ${e.bp>0?'raised':'cut'} ${Math.abs(e.bp)} bp to ${e.to.toFixed(2)}% on ${fmtD(e.t)}${e.eff?' (effective '+fmtD(D(e.eff))+')':''}`;
+
+const asofLine=(X,y1,y2,t0,t1)=>state.asof!=null&&state.asof>=t0&&state.asof<=t1?`<g><title>Board date ${fmtD(state.asof)}</title><line x1="${X(state.asof)}" x2="${X(state.asof)}" y1="${y1}" y2="${y2}" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="1 4" stroke-linecap="round"/></g>`:'';
+function setAsof(t){state.asof=t;renderMatrix();renderSqueeze();renderAsof();renderPairChart();renderCandles()}
+function renderAsof(){
+  const a=state.asof,N=ASTEPS.length;let idx=N;if(a!=null){idx=0;ASTEPS.forEach((t,i)=>{if(t<=a)idx=i})}
+  const r=$('#asof');r.max=N;r.value=idx;
+  const evs=a==null?[]:EVENTS.filter(e=>e.t===a).map(e=>`${CC[e.c].code} ${e.bp>0?'raised':'cut'} ${Math.abs(e.bp)} bp to ${e.to.toFixed(2)}%`);
+  $('#asofLbl').innerHTML=a==null?`<b>Now</b>, ${fmtD(D(TODAY))}. Drag back to step through each decision.`:`<b>${fmtD(a)}</b>${evs.length?': '+evs.join('; '):(a===D(SINCE)?': rates at the start of 2025.':'')}${evs.length?'':''}`;
+  const on=a==null?'now':a===D(SINCE)?'jan25':a===D('2026-01-01')?'jan26':'';
+  $('#asofSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.a===on)));
+}
+
+/* ---------- FX ---------- */
+async function loadFX(){
+  const urls=['https://api.frankfurter.dev/v1/2024-12-31..?base=USD&symbols='+SYM,'https://api.frankfurter.app/2024-12-31..?from=USD&to='+SYM];
+  for(const u of urls){
+    try{
+      const r=await fetch(u);if(!r.ok)throw new Error(r.status);
+      const j=await r.json();const dates=Object.keys(j.rates).sort();
+      const T=[],S=[],usd={USD:[]};ORDER.forEach(c=>{if(c!=='USD')usd[c]=[]});
+      dates.forEach(d=>{const row=j.rates[d];if(!ORDER.filter(c=>c!=='USD').every(c=>row[c]>0))return;T.push(D(d));S.push(d);usd.USD.push(1);ORDER.forEach(c=>{if(c!=='USD')usd[c].push(row[c])})});
+      if(T.length<50)throw new Error('short');
+      FX={T,S,usd};FXSRC=new URL(u).host;return true;
+    }catch(e){}
+  }
+  FX=null;FXERR=true;return false;
+}
+const px=(b,q,i)=>FX.usd[q][i]/FX.usd[b][i];
+function winIdx(){const t0=D(WINS[state.win].from());let i0=FX.T.findIndex(t=>t>=t0);if(i0<0)i0=FX.T.length-2;return [i0,FX.T.length-1]}
+function pairStats(p,i0,i1){
+  const [b,q]=p.split('/');const T=FX.T;
+  const g0=rateAt(b,T[i0])-rateAt(q,T[i0]),g1=rateNow(b)-rateNow(q);
+  const p0=px(b,q,i0),p1=px(b,q,i1);
+  const xs=[],ys=[];for(let i=i0;i<=i1;i++){xs.push(rateAt(b,T[i])-rateAt(q,T[i]));ys.push(Math.log(px(b,q,i)))}
+  const mx=xs.reduce((a,v)=>a+v,0)/xs.length,my=ys.reduce((a,v)=>a+v,0)/ys.length;let sxy=0,sxx=0,syy=0;
+  for(let k=0;k<xs.length;k++){sxy+=(xs[k]-mx)*(ys[k]-my);sxx+=(xs[k]-mx)**2;syy+=(ys[k]-my)**2}
+  const r=sxx>1e-12&&syy>1e-12?sxy/Math.sqrt(sxx*syy):null;
+  const dgap=g1-g0,dpx=(p1/p0-1)*100;
+  let read='flat';if(Math.abs(dgap)>=0.05)read=(dgap>0)===(dpx>0)?'with':'against';
+  return {p,b,q,gap:g1,dgap,dpx,r,read};
+}
+
+/* ---------- rate table ---------- */
+function spark(c){
+  const w=96,h=26,s=CC[c].steps,t0=D(SINCE),t1=Date.now();const vs=s.map(x=>x.v);const lo=Math.min(...vs),hi=Math.max(...vs);const rng=(hi-lo)||1;
+  const X=t=>2+(t-t0)/(t1-t0)*(w-6),Y=v=>h-3-(v-lo)/rng*(h-8);
+  let d='';s.forEach((p,i)=>{d+=(i?'L'+X(p.t).toFixed(1)+' '+Y(s[i-1].v).toFixed(1):'M'+X(p.t).toFixed(1)+' '+Y(p.v).toFixed(1))+'L'+X(p.t).toFixed(1)+' '+Y(p.v).toFixed(1)});
+  d+='L'+X(t1).toFixed(1)+' '+Y(s[s.length-1].v).toFixed(1);
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${d}" fill="none" stroke="var(--c-${c})" stroke-width="2" stroke-linejoin="round"/><circle cx="${X(t1).toFixed(1)}" cy="${Y(s[s.length-1].v).toFixed(1)}" r="3" fill="var(--c-${c})" stroke="var(--surf)" stroke-width="1.5"/></svg>`;
+}
+function rangeText(c){const v=rateNow(c);return c==='USD'?`${(v-.125).toFixed(2)}–${(v+.125).toFixed(2)}%`:v.toFixed(2)+'%'}
+function bpCell(v){if(v===0)return '<span class="muted">0</span>';return `<span class="${v>0?'num-pos':'num-neg'}">${Math.abs(v)}</span>`}
+function renderRates(){
+  const y25=D('2025-12-31');
+  let h='<thead><tr><th>Currency</th><th class="l">Bank</th><th>Rate</th><th>Last move</th><th>Since Jan 2025 (bp)</th><th>2026 so far (bp)</th><th>Path</th><th>Next decision</th></tr></thead><tbody>';
+  ORDER.slice().sort((a,b)=>rateNow(b)-rateNow(a)).forEach(c=>{
+    const x=CC[c];const last=x.ev.length?EVENTS.filter(e=>e.c===c).pop():null;
+    const since=Math.round((x.now-x.start)*100),ytd=Math.round((x.now-rateAt(c,y25))*100);
+    const dd=Math.round((D(x.next)-D(TODAY))/MS);
+    h+=`<tr><td><span class="ccy"><span class="dot" style="--c:var(--c-${c})"></span>${c}</span></td>
+      <td class="l">${x.bank}<small>${x.what}</small></td>
+      <td><b>${rangeText(c)}</b>${c==='USD'?`<small>mid ${x.now.toFixed(3)}</small>`:''}</td>
+      <td>${last?`${fmtD(last.t)}<small>${last.bp>0?'raised':'cut'} ${Math.abs(last.bp)} bp</small>`:'<span class="muted">none</span>'}</td>
+      <td>${bpCell(since)}</td><td>${bpCell(ytd)}</td><td>${spark(c)}</td>
+      <td>${fmtD(D(x.next),{year:undefined})}${x.nextNote?'*':''}<small>${dd>=0?'in '+dd+' day'+(dd===1?'':'s'):'passed'}</small></td></tr>`;
+  });
+  $('#rateTable').innerHTML=h+'</tbody>';
+}
+
+/* ---------- rate bias ---------- */
+function biasOf(b,q){const now=Date.now();return biasAt(b,q,state.asof==null?now:state.asof,now-D(WINS[state.win].from()))}
+function biasAt(b,q,tEnd,len){
+  const tS=Math.max(D(SINCE),tEnd-len);
+  const lvl=rateAt(b,tEnd)-rateAt(q,tEnd),chg=lvl-(rateAt(b,tS)-rateAt(q,tS));
+  if(Math.abs(lvl)<.25&&Math.abs(chg)<.25)return {dir:0,fade:false,glyph:'',label:'Neutral',lvl,chg};
+  const dir=Math.abs(lvl)>=.25?Math.sign(lvl):Math.sign(chg);
+  const fade=Math.abs(chg)>=.05&&Math.sign(chg)!==dir;
+  const glyph=dir>0?(fade?'△':'▲'):(fade?'▽':'▼');
+  return {dir,fade,glyph,label:(dir>0?'Bullish':'Bearish')+(fade?', fading':''),lvl,chg};
+}
+function renderBiasCheck(){
+  const el=$('#biasCheck');if(!FX){el.textContent='';return}
+  const [i0,i1]=winIdx();let hit=0,n=0;
+  PAIRS.forEach(p=>{const [b,q]=p.split('/');const d0=rateAt(b,FX.T[i0])-rateAt(q,FX.T[i0]);if(Math.abs(d0)<.25)return;const mv=px(b,q,i1)/px(b,q,i0)-1;n++;if(Math.sign(d0)===Math.sign(mv))hit++});
+  el.textContent=n?`Check: ${({m1:'in the last month',m10:'in the last 10 months',m3:'in the last 90 days',m6:'in the last 6 months',ytd:'in 2026 so far',all:'since Jan 2025'})[state.win]||WINS[state.win].label}, the price moved the way the starting differential pointed in ${hit} of ${n} pairs. A coin flip is about half.`:'';
+}
+
+/* ---------- pair board ---------- */
+function renderMatrix(){
+  const mob=window.innerWidth<480;const dp=mob?1:2;
+  const neu=cssHex('--neu'),pos=cssHex('--pos'),neg=cssHex('--neg');
+  let h='<table class="mx"><thead><tr><th></th>'+ORDER.map(c=>`<th scope="col"><span class="dot" style="--c:var(--c-${c})"></span>${c}</th>`).join('')+'</tr></thead><tbody>';
+  ORDER.forEach((b,i)=>{
+    h+=`<tr><th class="r" scope="row">${b}</th>`;
+    ORDER.forEach((q,j)=>{
+      if(j<=i){h+='<td class="na"></td>';return}
+      const d=ra(b)-ra(q),dn=rateNow(b)-rateNow(q),p=b+'/'+q,t=Math.min(1,Math.abs(d)/4.6);
+      const bg=mix(neu,d>=0?pos:neg,Math.pow(t,.8)*.92),fg=lum(bg)>.36?'#0b0b0b':'#ffffff';
+      const sel=state.sel.includes(p);const bi=biasOf(b,q);
+      h+=`<td><button class="cell${sel?' sel':''}" data-p="${p}" style="background:rgb(${bg});color:${fg};${sel?'--pk:'+slotVar(state.slot[p]):''}" aria-pressed="${sel}" aria-label="${p}: base minus quote ${sg(d)} points. Rate bias ${bi.label}. ${sel?'Selected.':''}" title="${p}  ${sg(d)} pp (${CC[b].code} ${ra(b).toFixed(2)}% vs ${CC[q].code} ${ra(q).toFixed(2)}%)${state.asof==null?'':'. Now '+sg(dn)+' pp'}. Rate bias: ${bi.label}">${sel?'<span class="pk"></span>':''}${bi.glyph?`<span class="bz" aria-hidden="true">${bi.glyph}</span>`:''}${sg(d,dp)}</button></td>`;
+    });
+    h+='</tr>';
+  });
+  $('#matrix').innerHTML=h+'</tbody></table>';
+}
+function togglePair(p){
+  const i=state.sel.indexOf(p);
+  if(i>=0){if(state.sel.length===1)return;state.sel.splice(i,1);delete state.slot[p];if(state.focus===p)state.focus=state.sel[0]}
+  else{if(state.sel.length===3){const out=state.sel.shift();delete state.slot[out]}
+    const used=new Set(Object.values(state.slot));let k=1;while(used.has(k))k++;state.slot[p]=k;state.sel.push(p);state.focus=p}
+  renderAll();
+}
+function renderChips(){
+  $('#pairChips').innerHTML=state.sel.map(p=>`<span class="chip${p===state.focus?' focus':''}" data-focus="${p}" style="--k:${slotVar(state.slot[p])}"><span class="sw"></span>${p}<button class="x" data-rm="${p}" aria-label="Remove ${p}"${state.sel.length===1?' disabled':''}>&times;</button></span>`).join('');
+  const single=state.sel.length===1;
+  $('#modeSeg').querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',String((single?state.mode:'idx')===b.dataset.m));if(b.dataset.m==='px')b.disabled=!single});
+}
+
+/* ---------- pair chart ---------- */
+function tipShow(host,html,x,y){let t=host.querySelector('.tip');if(!t){t=document.createElement('div');t.className='tip';host.appendChild(t)}t.innerHTML=html;t.style.display='block';
+  const w=t.offsetWidth,hh=t.offsetHeight,W=host.clientWidth;let l=x+14;if(l+w>W)l=x-w-14;if(l<0)l=0;let tp=Math.max(0,Math.min(y-hh/2,host.clientHeight-hh));t.style.left=l+'px';t.style.top=tp+'px'}
+function tipHide(host){const t=host.querySelector('.tip');if(t)t.style.display='none'}
+function nearest(arr,t){let lo=0,hi=arr.length-1;while(hi-lo>1){const m=(lo+hi)>>1;if(arr[m]<=t)lo=m;else hi=m}return Math.abs(arr[lo]-t)<=Math.abs(arr[hi]-t)?lo:hi}
+
+function renderPairChart(){
+  const host=$('#pairChart');
+  if(!FX){host.innerHTML=`<p class="empty">Spot history could not be loaded${FXERR?' from api.frankfurter.dev or api.frankfurter.app':''}. The rate table and pair board above still work.<button id="retryFX">Retry</button></p>`;const b=$('#retryFX');if(b)b.onclick=boot;return}
+  const W=Math.max(300,host.clientWidth),mob=W<560;
+  const ml=mob?44:56,mr=mob?66:92,mt=36,hP=mob?190:250,gap=32,hD=mob?105:130,mb=26;
+  const H=mt+hP+gap+hD+mb;
+  const [i0,i1]=winIdx();const T=FX.T;const t0=T[i0],t1=T[i1];
+  const single=state.sel.length===1;const mode=single?state.mode:'idx';
+  const X=t=>ml+(t-t0)/(t1-t0)*(W-ml-mr);
+  const ser=state.sel.map(p=>{const [b,q]=p.split('/');const pr=[],df=[];for(let i=i0;i<=i1;i++){pr.push(px(b,q,i));df.push(rateAt(b,T[i])-rateAt(q,T[i]))}
+    return {p,b,q,pr,df,idx:pr.map(v=>v/pr[0]*100),k:state.slot[p]}});
+  const vals=ser.flatMap(s=>mode==='idx'?s.idx:s.pr);let lo=Math.min(...vals),hi=Math.max(...vals);const pad=((hi-lo)||lo*.01)*.08;
+  const pt=ticks(lo-pad,hi+pad,4);const yLo=pt[0],yHi=pt[pt.length-1];const YP=v=>mt+hP-(v-yLo)/(yHi-yLo)*hP;
+  const dv=ser.flatMap(s=>s.df).concat([0]);const dt=ticks(Math.min(...dv)-.1,Math.max(...dv)+.1,3);const dLo=dt[0],dHi=dt[dt.length-1];
+  const dTop=mt+hP+gap;const YD=v=>dTop+hD-(v-dLo)/(dHi-dLo)*hD;
+  const banks=new Set();ser.forEach(s=>{banks.add(s.b);banks.add(s.q)});
+  const evs=EVENTS.filter(e=>banks.has(e.c)&&e.t>t0&&e.t<=t1);
+  let s='';
+  s+=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="presentation">`;
+  pt.forEach(v=>{const y=YP(v);s+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${ml-8}" y="${y+4}" text-anchor="end">${mode==='idx'?v.toFixed(0):v.toFixed(pxDp(v))}</text>`});
+  dt.forEach(v=>{const y=YD(v);s+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="${v===0?'var(--axis)':'var(--grid)'}" ${v===0?'stroke-width="1.5"':''}/><text x="${ml-8}" y="${y+4}" text-anchor="end">${v===0?'0':sg(v,v%1?1:0).replace('+','')}</text>`});
+  xTicks(t0,t1,W-ml-mr).forEach(t=>{const x=X(t);s+=`<line x1="${x}" x2="${x}" y1="${dTop+hD}" y2="${dTop+hD+4}" stroke="var(--axis)"/><text x="${x}" y="${dTop+hD+18}" text-anchor="middle">${fmtM(t)}</text>`});
+  s+=`<text class="ptitle" x="${ml}" y="${mt+hP+gap-10}" >Rate differential, base minus quote (pp)</text>`;
+  /* events */
+  const rowEnd=[-99,-99,-99];
+  evs.forEach(e=>{const x=X(e.t);const lab=`${CC[e.c].code} ${e.bp>0?'▲':'▼'}${Math.abs(e.bp)}`;const wTxt=lab.length*6.6+4;let r=rowEnd.findIndex(v=>x-v>=wTxt);if(r<0)r=rowEnd.indexOf(Math.min(...rowEnd));rowEnd[r]=x;
+    const yT=11+r*11;
+    s+=`<g class="ev"><title>${evText(e)}</title><line x1="${x}" x2="${x}" y1="${yT+3}" y2="${dTop+hD}" stroke="var(--axis)" stroke-dasharray="3 3"/>${W<560?'':`<text x="${x+3}" y="${yT}" style="font-size:10.5px;font-weight:600;fill:var(--ink)">${lab}</text>`}</g>`});
+  s+=asofLine(X,mt,dTop+hD,t0,t1);
+  /* price lines */
+  const ends=[];
+  ser.forEach(se=>{const pts=se.pr.map((v,k)=>[X(T[i0+k]),YP(mode==='idx'?se.idx[k]:v)]);
+    s+=`<path d="${line(pts)}" fill="none" stroke="${slotVar(se.k)}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;ends.push({y:pts[pts.length-1][1],txt:se.p,k:se.k,v:mode==='idx'?se.idx[se.idx.length-1].toFixed(1):se.pr[se.pr.length-1].toFixed(pxDp(se.pr[se.pr.length-1])),yy:pts[pts.length-1][1]})});
+  declutter(ends.map(e=>e),13,mt+6,mt+hP-2).forEach(e=>{s+=`<text class="lbl" x="${W-mr+8}" y="${e.y+4}" style="fill:var(--ink)"><tspan fill="${slotVar(e.k)}">● </tspan>${e.txt}</text>`});
+  /* gap lines (stepped) */
+  const dEnds=[];
+  ser.forEach(se=>{let pts=[];se.df.forEach((v,k)=>{const x=X(T[i0+k]);if(k&&v!==se.df[k-1])pts.push([x,YD(se.df[k-1])]);pts.push([x,YD(v)])});
+    s+=`<path d="${line(pts)}" fill="none" stroke="${slotVar(se.k)}" stroke-width="2" stroke-linejoin="round"/>`;dEnds.push({y:YD(se.df[se.df.length-1]),txt:sg(se.df[se.df.length-1]),k:se.k})});
+  declutter(dEnds,13,dTop+4,dTop+hD).forEach(e=>{s+=`<text class="lbl" x="${W-mr+8}" y="${e.y+4}" style="fill:var(--ink)"><tspan fill="${slotVar(e.k)}">● </tspan>${e.txt}</text>`});
+  s+=`<g id="xh" style="display:none"><line id="xhl" y1="${mt}" y2="${dTop+hD}" stroke="var(--ink2)" stroke-width="1"/>${ser.map((se,n)=>`<circle id="xp${n}" r="4" fill="${slotVar(se.k)}" stroke="var(--surf)" stroke-width="2"/><circle id="xd${n}" r="4" fill="${slotVar(se.k)}" stroke="var(--surf)" stroke-width="2"/>`).join('')}</g>`;
+  s+=`<rect id="xov" x="${ml}" y="${mt}" width="${W-ml-mr}" height="${hP+gap+hD}" fill="transparent"/>`;
+  s+='</svg>';
+  host.innerHTML=s+`<p class="note" style="margin:6px 0 0">${mode==='idx'?`Price indexed to 100 on ${fmtD(t0)}.`:'Price in quote currency per one base unit.'} Dashed lines mark decisions by either bank${W<560?'':'; flags show the bank and the move in basis points'}.</p>`;
+  const svg=host.querySelector('svg');const ov=svg.querySelector('#xov');const xh=svg.querySelector('#xh'),xl=svg.querySelector('#xhl');
+  function move(ev){
+    const r=svg.getBoundingClientRect();const sc=W/r.width;const mx=(ev.clientX-r.left)*sc;const t=t0+(mx-ml)/(W-ml-mr)*(t1-t0);
+    const k=Math.max(0,Math.min(T.length-1,nearest(T,t)));const ii=Math.max(i0,Math.min(i1,k));const x=X(T[ii]);
+    xh.style.display='block';xl.setAttribute('x1',x);xl.setAttribute('x2',x);
+    let rows='';ser.forEach((se,n)=>{const kk=ii-i0;const cp=svg.querySelector('#xp'+n),cd=svg.querySelector('#xd'+n);
+      cp.setAttribute('cx',x);cp.setAttribute('cy',YP(mode==='idx'?se.idx[kk]:se.pr[kk]));cd.setAttribute('cx',x);cd.setAttribute('cy',YD(se.df[kk]));
+      rows+=`<div class="row"><span><span class="sw" style="--k:${slotVar(se.k)}"></span><b>${se.p}</b></span><span>${se.pr[kk].toFixed(pxDp(se.pr[kk]))}${mode==='idx'?` &nbsp;(${se.idx[kk].toFixed(1)})`:''}</span></div><div class="row muted"><span>&nbsp;&nbsp;&nbsp;&nbsp;differential</span><span>${sg(se.df[kk])} pp</span></div>`});
+    const day=evs.filter(e=>e.t>=T[ii-1>=0?ii-1:0]&&e.t<=T[ii]&&e.t>T[Math.max(0,ii-1)]||e.t===T[ii]);
+    const evh=day.length?'<hr>'+day.map(e=>`<div>${evText(e)}</div>`).join(''):'';
+    tipShow(host,`<b>${fmtD(T[ii])}</b><hr>${rows}${evh}`,x/sc,(YP(yLo)/2+60)/1);
+    const tip=host.querySelector('.tip');tip.style.left=Math.min(Math.max(0,x/sc+14),host.clientWidth-tip.offsetWidth)+'px';if(x/sc+14+tip.offsetWidth>host.clientWidth)tip.style.left=Math.max(0,x/sc-tip.offsetWidth-14)+'px';tip.style.top=(mt/sc+10)+'px';
+  }
+  ov.addEventListener('pointermove',move);ov.addEventListener('pointerdown',move);
+  ov.addEventListener('pointerleave',()=>{xh.style.display='none';tipHide(host)});
+}
+
+
+
+
+/* ---------- notice board ---------- */
+let LASTVISIT=null;try{LASTVISIT=localStorage.getItem('rd_last')}catch(e){}
+function renderNotices(){
+  const now=D(TODAY),tL=now-30*MS,tF=now+30*MS,len=Date.now()-D(WINS[state.win].from());
+  const pl=p=>`<button class="plink" data-p="${p}">${p}</button>`;
+  const isNew=d=>LASTVISIT&&d>LASTVISIT?'<span class="newtag">New</span>':'';
+  /* decisions */
+  const rec=EVENTS.filter(e=>e.t>tL&&e.t<=now).reverse();
+  const dl=rec.map(e=>{const flips=[];PAIRS.forEach(p=>{const [b,q]=p.split('/');if(e.c!==b&&e.c!==q)return;
+      const pre=(e.c===b?e.from:rateAt(b,e.t-MS))-(e.c===q?e.from:rateAt(q,e.t-MS)),post=rateAt(b,e.t)-rateAt(q,e.t);
+      if(pre!==0&&Math.sign(pre)!==Math.sign(post)&&post!==0)flips.push(`${post>0?b:q} now pays more than ${post>0?q:b}`)});
+    return `<li><b>${CC[e.c].code} ${e.bp>0?'raised':'cut'} ${Math.abs(e.bp)} bp</b> to ${e.to.toFixed(2)}%${isNew(e.d)}<small>${fmtD(e.t)}${e.eff?', effective '+fmtD(D(e.eff)):''}.${flips.length?' Flipped: '+flips.join('; ')+'.':''}</small></li>`}).join('');
+  /* direction changes */
+  const ch=[];PAIRS.forEach(p=>{const [b,q]=p.split('/');const a=biasAt(b,q,now-30*MS,len),c=biasAt(b,q,now,len);if(a.label===c.label)return;
+    const rank=a.dir&&c.dir&&a.dir!==c.dir?0:(!a.dir||!c.dir)?1:2;ch.push({p,a,c,rank})});
+  ch.sort((x,y)=>x.rank-y.rank);
+  const cl=ch.slice(0,8).map(x=>`<li>${pl(x.p)}: ${x.a.glyph} ${x.a.label} → ${x.c.glyph} ${x.c.label}</li>`).join('')+(ch.length>8?`<li class="muted">${ch.length-8} more smaller changes</li>`:'');
+  /* upcoming */
+  const up=ORDER.map(c=>({c,t:D(CC[c].next)})).filter(x=>x.t>=now&&x.t<=tF).sort((a,b)=>a.t-b.t);
+  const ul=up.map(x=>{const d=Math.round((x.t-now)/MS);return `<li><b>${CC[x.c].code}</b> ${fmtD(x.t,{year:undefined})}${CC[x.c].nextNote?'*':''}<small>${d===0?'Today':'In '+d+' day'+(d===1?'':'s')}. Rate now ${rangeText(x.c)}.</small></li>`}).join('');
+  const none=t=>`<div class="quiet">${t}</div>`;
+  $('#nBoard').innerHTML=`<div><h3>Rate decisions, last 30 days</h3>${dl?'<ul>'+dl+'</ul>':none('No rate changes.')}</div>
+    <div><h3>Direction changes, last 30 days</h3><p class="muted" style="margin:-2px 0 6px;font-size:12.5px">Rate bias a month ago against now, using the period you picked below.</p>${cl?'<ul>'+cl+'</ul>':none('No pair changed direction.')}</div>
+    <div><h3>Due in the next 30 days</h3>${ul?'<ul>'+ul+'</ul>':none('No scheduled decisions.')}</div>`;
+}
+function pickPair(x){if(state.sel.includes(x)){state.focus=x;renderChips();renderCandles();renderEvents()}else togglePair(x);$('#workspace').scrollIntoView({behavior:'smooth'})}
+
+/* ---------- squeeze / expand ---------- */
+const SQ_WINS=['m1','m6','m10','all'];
+function bpTxt(v){return v===0?'0':(v>0?'+':'−')+Math.abs(v)+' bp'}
+function renderSqueeze(){
+  const w=WINS[state.win],t0=D(w.from());
+  $('#sinceDate').value=t0>=D(SINCE)?new Date(t0).toISOString().slice(0,10):SINCE;
+  $('#sqSeg').innerHTML=(state.win==='custom'?['custom']:[]).concat(SQ_WINS).map(k=>`<button data-w="${k}" aria-pressed="${state.win===k}">${WINS[k].label}</button>`).join('');
+  const rows=PAIRS.map(p=>{const [b,q]=p.split('/');const g0=Math.abs(rateAt(b,t0)-rateAt(q,t0)),g1=Math.abs(rateNow(b)-rateNow(q));
+    return {p,b,q,g0,g1,d:g1-g0,mb:Math.round((rateNow(b)-rateAt(b,t0))*100),mq:Math.round((rateNow(q)-rateAt(q,t0))*100)}});
+  const TH=.05,sq=rows.filter(r=>r.d<-TH).sort((a,b)=>a.d-b.d),ex=rows.filter(r=>r.d>TH).sort((a,b)=>b.d-a.d),fl=rows.filter(r=>Math.abs(r.d)<=TH);
+  const max=Math.max(.1,...rows.map(r=>Math.abs(r.d)));
+  const avg=k=>rows.reduce((a,r)=>a+r[k],0)/rows.length;const a0=avg('g0'),a1=avg('g1');
+  $('#sqHead').innerHTML=`<span><b>${sq.length}</b> contracting</span><span><b>${ex.length}</b> expanding</span><span><b>${fl.length}</b> unchanged</span><span class="muted">Average differential across all 28 pairs: ${a0.toFixed(2)} → <b>${a1.toFixed(2)}</b> pp, ${Math.abs(a1-a0)<.05?'about the same':a1<a0?'contracting':'expanding'}</span>`;
+  const row=r=>{const bi=biasOf(r.b,r.q);return `<button class="sqrow" data-p="${r.p}" title="Show ${r.p} on the charts"><span class="sqp">${r.p}</span><span class="sqbar"><i style="width:${Math.max(3,Math.abs(r.d)/max*100)}%"></i></span><span class="sqd">${sg(r.d)}</span><small><span class="btag">${bi.glyph} ${bi.label}.</span> Differential ${r.g0.toFixed(2)} → ${r.g1.toFixed(2)} pp. ${r.b} ${bpTxt(r.mb)}, ${r.q} ${bpTxt(r.mq)}.</small></button>`};
+  $('#sqList').innerHTML=sq.length?sq.map(row).join(''):'<p class="sqnone">No pair has a smaller differential over this period.</p>';
+  $('#exList').innerHTML=ex.length?ex.map(row).join(''):'<p class="sqnone">No pair has a bigger differential over this period.</p>';
+  $('#sqFlat').textContent=fl.length?`Unchanged (within 0.05 pp): ${fl.map(r=>r.p).join(', ')}. Since ${fmtD(t0)}; numbers are the change in the differential, in percentage points.`:`Since ${fmtD(t0)}; numbers are the change in the differential, in percentage points.`;
+}
+
+/* ---------- daily candles ---------- */
+async function loadCandles(p){
+  const [b,q]=p.split('/');OHLC[p]={status:'loading'};
+  try{
+    const base=CFG.oandaProxy.replace(/\/$/,'');
+    const u=`${base}/v3/instruments/${b}_${q}/candles?granularity=D&price=M&from=2024-12-30T00:00:00Z&to=${new Date().toISOString().slice(0,19)}Z`;
+    const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();if(!j.candles)throw new Error('no candles');
+    const c=j.candles.filter(x=>x.mid).map(x=>({t:Date.parse(x.time.slice(0,19)+'Z')+12*36e5,o:+x.mid.o,h:+x.mid.h,l:+x.mid.l,c:+x.mid.c}))
+      .map(x=>({...x,t:Date.UTC(new Date(x.t).getUTCFullYear(),new Date(x.t).getUTCMonth(),new Date(x.t).getUTCDate())}));
+    if(c.length<20)throw new Error('too few candles');
+    OHLC[p]={status:'ok',c};
+  }catch(e){OHLC[p]={status:'err',err:String(e.message||e)}}
+  if(state.focus===p)renderCandles();
+}
+function renderCandles(){
+  const host=$('#candleChart');const p=state.focus,[b,q]=p.split('/');
+  const sel=$('#cPair');if(sel.value!==p)sel.value=p;
+  let rec=OHLC[p];if(!rec&&CFG.oandaProxy){loadCandles(p);rec=OHLC[p]}
+  const w0=D(WINS[state.win].from());
+  let data=null,mode='none';
+  if(rec&&rec.status==='ok'){data=rec.c.filter(x=>x.t>=w0);mode='candle'}
+  else if(FX){const i0=winIdx()[0];data=[];for(let i=i0;i<FX.T.length;i++){const v=px(b,q,i);data.push({t:FX.T[i],o:v,h:v,l:v,c:v})}mode='fix'}
+  const msg=!CFG.oandaProxy?'No broker feed connected, so this shows the ECB daily fixing, which has no highs or lows.':rec&&rec.status==='loading'?'Loading daily candles from the broker feed…':rec&&rec.status==='err'?`The broker feed did not return ${p} (${rec.err}). Showing the ECB daily fixing instead.`:'';
+  $('#cSrc').textContent=mode==='candle'?`Daily candles: ${CFG.candleLabel}, through ${CFG.oandaProxy.replace(/^https?:\/\//,'').split('/')[0]}. Each broker cuts its trading day at its own rollover, so highs and lows can differ slightly between brokers.`:msg;
+  $('#candleKey').innerHTML=mode==='candle'?`<span><svg width="12" height="14"><rect x="2" y="3" width="8" height="8" fill="var(--surf)" stroke="var(--pos)" stroke-width="1.6"/></svg>Closed up (hollow)</span><span><svg width="12" height="14"><rect x="2" y="3" width="8" height="8" fill="var(--neg)" stroke="var(--neg)" stroke-width="1.6"/></svg>Closed down (filled)</span><span>Dashed: rate decisions</span>${state.asof!=null?'<span>Dotted: board date</span>':''}`:'';
+  if(!data||data.length<2){host.innerHTML=`<p class="empty">${msg||'No price data loaded.'}</p>`;return}
+  const W=Math.max(300,host.clientWidth),mob=W<560;
+  const ml=mob?44:56,mr=mob?62:78,mt=10,hP=mob?200:270,gap=40,hD=mob?80:96,mb=26;const H=mt+hP+gap+hD+mb;
+  const t0=data[0].t,t1=data[data.length-1].t;const X=t=>ml+(t-t0)/((t1-t0)||1)*(W-ml-mr);
+  const lo=Math.min(...data.map(x=>x.l)),hi=Math.max(...data.map(x=>x.h));const pad=((hi-lo)||lo*.01)*.06;
+  const pt=ticks(lo-pad,hi+pad,5);const yLo=pt[0],yHi=pt[pt.length-1];const YP=v=>mt+hP-(v-yLo)/(yHi-yLo)*hP;
+  const gp=data.map(x=>rateAt(b,x.t)-rateAt(q,x.t));
+  const dt=ticks(Math.min(...gp,0)-.1,Math.max(...gp,0)+.1,3);const dLo=dt[0],dHi=dt[dt.length-1];const dTop=mt+hP+gap;const YD=v=>dTop+hD-(v-dLo)/(dHi-dLo)*hD;
+  const last=data[data.length-1],dp=pxDp(last.c);
+  const evs=EVENTS.filter(e=>(e.c===b||e.c===q)&&e.t>t0&&e.t<=t1);
+  let o=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="presentation">`;
+  pt.forEach(v=>{const y=YP(v);o+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${ml-8}" y="${y+4}" text-anchor="end">${v.toFixed(pxDp(v))}</text>`});
+  dt.forEach(v=>{const y=YD(v);o+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="${v===0?'var(--axis)':'var(--grid)'}" ${v===0?'stroke-width="1.5"':''}/><text x="${ml-8}" y="${y+4}" text-anchor="end">${v===0?'0':sg(v,v%1?1:0).replace('+','')}</text>`});
+  xTicks(t0,t1,W-ml-mr).forEach(t=>{const x=X(t);o+=`<line x1="${x}" x2="${x}" y1="${dTop+hD}" y2="${dTop+hD+4}" stroke="var(--axis)"/><text x="${x}" y="${dTop+hD+18}" text-anchor="middle">${fmtM(t)}</text>`});
+  o+=`<text class="ptitle" x="${ml}" y="${dTop-14}">${p} rate differential, base minus quote (pp)</text>`;
+  evs.forEach(e=>{const x=X(e.t);o+=`<g class="ev"><title>${evText(e)}</title><line x1="${x}" x2="${x}" y1="${mt}" y2="${dTop+hD}" stroke="var(--axis)" stroke-dasharray="3 3"/></g>`});
+  o+=asofLine(X,mt,dTop+hD,t0,t1);
+  if(mode==='candle'){
+    const step=(W-ml-mr)/data.length,bw=Math.max(1.5,Math.min(9,step*.72));
+    data.forEach(x=>{const cx=X(x.t),up=x.c>=x.o,col=up?'var(--pos)':'var(--neg)';
+      const yo=YP(x.o),yc=YP(x.c),top=Math.min(yo,yc),h=Math.max(1,Math.abs(yo-yc));
+      o+=`<line x1="${cx}" x2="${cx}" y1="${YP(x.h)}" y2="${YP(x.l)}" stroke="${col}" stroke-width="1"/>`+
+         `<rect x="${cx-bw/2}" y="${top}" width="${bw}" height="${h}" fill="${up&&bw>=4?'var(--surf)':col}" stroke="${col}" stroke-width="${bw>=4?1.3:.6}"/>`});
+  }else{
+    o+=`<path d="${line(data.map(x=>[X(x.t),YP(x.c)]))}" fill="none" stroke="var(--ink2)" stroke-width="2" stroke-linejoin="round"/>`;
+  }
+  o+=`<text class="lbl" x="${W-mr+8}" y="${YP(last.c)+4}" style="fill:var(--ink)">${last.c.toFixed(dp)}</text>`;
+  let gpts=[];gp.forEach((v,k)=>{const x=X(data[k].t);if(k&&v!==gp[k-1])gpts.push([x,YD(gp[k-1])]);gpts.push([x,YD(v)])});
+  o+=`<path d="${line(gpts)}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/><text class="lbl" x="${W-mr+8}" y="${YD(gp[gp.length-1])+4}" style="fill:var(--ink)">${sg(gp[gp.length-1])}</text>`;
+  o+=`<line id="cxl" y1="${mt}" y2="${dTop+hD}" stroke="var(--ink2)" style="display:none"/><rect id="cov" x="${ml}" y="${mt}" width="${W-ml-mr}" height="${hP+gap+hD}" fill="transparent"/></svg>`;
+  host.innerHTML=o;
+  const svg=host.querySelector('svg'),ov=svg.querySelector('#cov'),xl=svg.querySelector('#cxl');
+  const ts=data.map(x=>x.t);
+  function mv(ev){const r=svg.getBoundingClientRect(),sc=W/r.width,mx=(ev.clientX-r.left)*sc;const t=t0+(mx-ml)/(W-ml-mr)*(t1-t0);const k=nearest(ts,t),x=data[k],cx=X(x.t);
+    xl.style.display='block';xl.setAttribute('x1',cx);xl.setAttribute('x2',cx);
+    const prev=k?ts[k-1]:t0;const day=evs.filter(e=>e.t>prev&&e.t<=x.t);
+    const chg=(x.c/x.o-1)*100;
+    const rows=mode==='candle'?`<div class="row"><span>Open</span><span>${x.o.toFixed(dp)}</span></div><div class="row"><span>High</span><span>${x.h.toFixed(dp)}</span></div><div class="row"><span>Low</span><span>${x.l.toFixed(dp)}</span></div><div class="row"><span>Close</span><span>${x.c.toFixed(dp)} (${sg(chg)}%)</span></div>`:`<div class="row"><span>Fixing</span><span>${x.c.toFixed(dp)}</span></div>`;
+    tipShow(host,`<b>${fmtD(x.t)}</b><hr>${rows}<div class="row muted"><span>Differential</span><span>${sg(gp[k])} pp</span></div>${day.length?'<hr>'+day.map(e=>`<div>${evText(e)}</div>`).join(''):''}`,cx/sc,70);}
+  ov.addEventListener('pointermove',mv);ov.addEventListener('pointerdown',mv);
+  ov.addEventListener('pointerleave',()=>{xl.style.display='none';tipHide(host)});
+}
+
+/* ---------- events table ---------- */
+function renderEvents(){
+  const t=$('#evTable');
+  if(!FX){t.innerHTML='';$('#evSub').textContent='Needs spot history.';return}
+  const [i0,i1]=winIdx();const T=FX.T,p=state.focus,[b,q]=p.split('/');const t0=T[i0];
+  $('#evSub').innerHTML=`For <b>${p}</b>: every decision by the ${CC[b].code} or the ${CC[q].code} since ${fmtD(t0)}, the differential it created, and what the pair did next. Click a pair chip above the chart to switch.`;
+  const evs=EVENTS.filter(e=>(e.c===b||e.c===q)&&e.t>t0);
+  let withN=0,tot=0;
+  let h='<thead><tr><th class="l">Date</th><th class="l">Bank</th><th>Move</th><th>Differential before to after (pp)</th><th>Pair after 5 days</th><th>Pair after 20 days</th><th class="l">5 days vs the rate change</th></tr></thead><tbody>';
+  if(!evs.length)h+='<tr><td colspan="7" class="l muted">No decisions by these two banks in this window.</td></tr>';
+  evs.forEach(e=>{
+    const dg=(e.c===b?1:-1)*e.bp/100;const gb=rateAt(b,e.t-MS)-rateAt(q,e.t-MS),ga=rateAt(b,e.t)-rateAt(q,e.t);
+    let k=-1;for(let i=0;i<T.length;i++)if(T[i]<=e.t)k=i;
+    const mv=n=>{if(k<0||k+n>=T.length)return null;return (px(b,q,k+n)/px(b,q,k)-1)*100};
+    const m5=mv(5),m20=mv(20);
+    let rd='<span class="muted">too recent</span>';
+    if(m5!=null){tot++;const w=(m5>0)===(dg>0);if(w)withN++;rd=w?`<span class="reading">✓ moved ${dg>0?'up':'down'}, as the differential implies</span>`:`<span class="reading">✗ moved ${m5>0?'up':'down'}, against the differential</span>`}
+    h+=`<tr><td class="l">${fmtD(e.t)}</td><td class="l"><span class="ccy"><span class="dot" style="--c:var(--c-${e.c})"></span>${CC[e.c].code}</span></td><td><span class="${e.bp>0?'num-pos':'num-neg'}">${Math.abs(e.bp)} bp</span> to ${e.to.toFixed(2)}%</td><td>${sg(gb)} → ${sg(ga)}</td><td>${m5==null?'—':pct(m5)}</td><td>${m20==null?'—':pct(m20)}</td><td class="l">${rd}</td></tr>`;
+  });
+  t.innerHTML=h+'</tbody>'+(tot?`<tfoot><tr><td colspan="7" class="l muted" style="padding:10px 14px">The pair moved the way the differential change implies after ${withN} of ${tot} decisions (5 trading days).</td></tr></tfoot>`:'');
+}
+
+/* ---------- ranking ---------- */
+function renderRank(){
+  const t=$('#rankTable');
+  if(!FX){t.innerHTML='';$('#rankSub').textContent='Needs spot history.';return}
+  const [i0,i1]=winIdx();
+  $('#rankSub').innerHTML=`Window: ${state.win==='custom'?WINS[state.win].label:WINS[state.win].label.toLowerCase()} (${fmtD(FX.T[i0])} to ${fmtD(FX.T[i1])}). "With rates" means the pair moved the way the change in the rate differential implies. Click a row to add it to the chart.`;
+  let rows=PAIRS.map(p=>pairStats(p,i0,i1));rows.forEach(r=>{r.adiff=Math.abs(r.dgap);r.agap=Math.abs(r.gap);r.apx=Math.abs(r.dpx)});
+  const k=state.sort.k,dir=state.sort.dir;
+  rows.sort((a,b)=>{const av=a[k],bv=b[k];if(typeof av==='string')return dir*av.localeCompare(bv);return dir*((av??-9)-(bv??-9))});
+  const cols=[['p','Pair','l'],['gap','Differential now (pp)'],['dgap','Differential change (pp)'],['dpx','Pair change'],['r','Correlation'],['read','Reading','l']];
+  let h='<thead><tr>'+cols.map(c=>`<th class="${c[2]||''}"><button data-sort="${c[0]==='dgap'?'adiff':c[0]==='dpx'?'apx':c[0]==='gap'?'agap':c[0]}">${c[1]}${(k===c[0]||(c[0]==='dgap'&&k==='adiff')||(c[0]==='dpx'&&k==='apx')||(c[0]==='gap'&&k==='agap'))?(dir>0?' ↑':' ↓'):''}</button></th>`).join('')+'</tr></thead><tbody>';
+  rows.forEach(r=>{const on=state.sel.includes(r.p);
+    const txt={with:'✓ With rates',against:'✗ Against rates',flat:'– Differential barely moved'}[r.read];
+    h+=`<tr class="pick${on?' on':''}" data-p="${r.p}" style="--k:${on?slotVar(state.slot[r.p]):'var(--ink)'}" tabindex="0"><td class="l"><b>${r.p}</b></td><td>${sg(r.gap)}</td><td>${sg(r.dgap)}</td><td>${pct(r.dpx)}</td><td>${r.r==null?'—':r.r.toFixed(2)}</td><td class="l">${txt}</td></tr>`});
+  t.innerHTML=h+'</tbody>';
+}
+
+/* ---------- policy path chart ---------- */
+function renderPath(){
+  const host=$('#pathChart');
+  $('#ccyChips').innerHTML=ORDER.map(c=>`<button class="chip ccy-chip${state.ccyOn.has(c)?'':' off'}" data-c="${c}" style="--k:var(--c-${c})" aria-pressed="${state.ccyOn.has(c)}"><span class="sw"></span>${c}</button>`).join('');
+  const W=Math.max(300,host.clientWidth),mob=W<560;const ml=mob?34:44,mr=mob?60:78,mt=12,h=mob?240:300,mb=26;const H=mt+h+mb;
+  const t0=D(SINCE),t1=D(TODAY);const X=t=>ml+(t-t0)/(t1-t0)*(W-ml-mr);
+  const on=ORDER.filter(c=>state.ccyOn.has(c));
+  const vmax=Math.max(1,...on.map(c=>Math.max(...CC[c].steps.map(s=>s.v))));const tk=ticks(0,vmax+.2,5);const hi=tk[tk.length-1];const Y=v=>mt+h-v/hi*h;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="presentation">`;
+  tk.forEach(v=>{const y=Y(v);s+=`<line x1="${ml}" x2="${W-mr}" y1="${y}" y2="${y}" stroke="${v===0?'var(--axis)':'var(--grid)'}"/><text x="${ml-8}" y="${y+4}" text-anchor="end">${v}%</text>`});
+  xTicks(t0,t1,W-ml-mr).forEach(t=>{const x=X(t);s+=`<line x1="${x}" x2="${x}" y1="${mt+h}" y2="${mt+h+4}" stroke="var(--axis)"/><text x="${x}" y="${mt+h+18}" text-anchor="middle">${fmtM(t)}</text>`});
+  const ends=[];
+  on.forEach(c=>{const st=CC[c].steps;let d='';st.forEach((p,i)=>{d+=(i?'L'+X(p.t).toFixed(1)+' '+Y(st[i-1].v).toFixed(1)+'L'+X(p.t).toFixed(1)+' '+Y(p.v).toFixed(1):'M'+X(p.t).toFixed(1)+' '+Y(p.v).toFixed(1))});d+='L'+X(t1).toFixed(1)+' '+Y(st[st.length-1].v).toFixed(1);
+    s+=`<path d="${d}" fill="none" stroke="var(--c-${c})" stroke-width="2" stroke-linejoin="round"/>`;
+    st.slice(1).forEach(p=>{s+=`<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="2.5" fill="var(--c-${c})" stroke="var(--surf)" stroke-width="1"/>`});
+    ends.push({y:Y(st[st.length-1].v),c,v:st[st.length-1].v})});
+  declutter(ends,13,mt+6,mt+h).forEach(e=>{s+=`<text class="lbl" x="${W-mr+8}" y="${e.y+4}" style="fill:var(--ink)"><tspan fill="var(--c-${e.c})">● </tspan>${e.c} ${e.v.toFixed(2)}</text>`});
+  s+=`<g id="pxh" style="display:none"><line id="pxl" y1="${mt}" y2="${mt+h}" stroke="var(--ink2)"/></g><rect id="pov" x="${ml}" y="${mt}" width="${W-ml-mr}" height="${h}" fill="transparent"/></svg>`;
+  host.innerHTML=s;
+  const svg=host.querySelector('svg'),ov=svg.querySelector('#pov'),xh=svg.querySelector('#pxh'),xl=svg.querySelector('#pxl');
+  function move(ev){const r=svg.getBoundingClientRect(),sc=W/r.width;const mx=(ev.clientX-r.left)*sc;const t=Math.max(t0,Math.min(t1,t0+(mx-ml)/(W-ml-mr)*(t1-t0)));const day=Math.round((t-t0)/MS)*MS+t0;const x=X(day);
+    xh.style.display='block';xl.setAttribute('x1',x);xl.setAttribute('x2',x);
+    const rows=on.map(c=>({c,v:rateAt(c,day)})).sort((a,b)=>b.v-a.v).map(o=>`<div class="row"><span><span class="sw" style="--k:var(--c-${o.c})"></span>${o.c}</span><b>${o.v.toFixed(2)}%</b></div>`).join('');
+    const dy=EVENTS.filter(e=>e.t===day&&state.ccyOn.has(e.c)).map(e=>`<div>${evText(e)}</div>`).join('');
+    tipShow(host,`<b>${fmtD(day)}</b><hr>${rows}${dy?'<hr>'+dy:''}`,x/sc,40);
+    const tip=host.querySelector('.tip');let l=x/sc+14;if(l+tip.offsetWidth>host.clientWidth)l=x/sc-tip.offsetWidth-14;tip.style.left=Math.max(0,l)+'px';tip.style.top='10px'}
+  ov.addEventListener('pointermove',move);ov.addEventListener('pointerdown',move);ov.addEventListener('pointerleave',()=>{xh.style.display='none';tipHide(host)});
+}
+
+/* ---------- sources ---------- */
+function renderSources(){
+  let h='<thead><tr><th>Currency</th><th class="l">Source of truth</th><th class="l">Live check on load</th><th>Next decision</th></tr></thead><tbody>';
+  ORDER.forEach(c=>{const x=CC[c],ch=CHECK[c];
+    let st='<span class="muted">Last checked on '+fmtD(D(VERIFIED))+'. No free feed that works from a web page.</span>';
+    if(ch){st={ok:`<span class="ok">✓ Matches</span> ${ch.text}`,diff:`<b>✗ Differs:</b> ${ch.text}`,err:`<span class="muted">Feed not reachable from this page. ${ch.text||''}</span>`,run:'<span class="muted">Checking…</span>'}[ch.status]}
+    h+=`<tr><td><span class="ccy"><span class="dot" style="--c:var(--c-${c})"></span>${c}</span></td><td class="l" style="white-space:normal;min-width:260px"><a href="${x.src}" target="_blank" rel="noopener">${x.srcName}</a><small>${x.verif}</small></td><td class="l" style="white-space:normal;min-width:220px">${st}</td><td>${fmtD(D(x.next))}${x.nextNote?'*<small>'+x.nextNote+'</small>':''}</td></tr>`});
+  $('#srcTable').innerHTML=h+'</tbody>';
+}
+function renderStatus(){
+  const parts=[];
+  if(FX)parts.push(`<span><b class="ok">✓</b> Spot history to ${fmtD(FX.T[FX.T.length-1])} (${FX.T.length} daily fixings, ${FXSRC})</span>`);
+  else parts.push('<span><b>✗</b> Spot history not loaded</span>');
+  const oks=Object.values(CHECK).filter(c=>c.status==='ok').length,diffs=Object.values(CHECK).filter(c=>c.status==='diff').length;
+  parts.push(`<span>Rates last verified ${fmtD(D(VERIFIED))}${RATES_SRC?' (from '+RATES_SRC+')':''}</span>`);
+  if(oks||diffs)parts.push(`<span>${oks} live feed${oks===1?'':'s'} agree${diffs?`, <b>${diffs} differ</b>`:''}</span>`);
+  $('#status').innerHTML=parts.join('');
+  let a='';
+  const stale=ORDER.filter(c=>CC[c].next<=TODAY&&VERIFIED<CC[c].next);
+  if(stale.length)a+=`<div class="alert"><b>Check these rates.</b> A scheduled decision has passed since the table was last verified: ${stale.map(c=>CC[c].code+' ('+fmtD(D(CC[c].next))+')').join(', ')}. The rate shown may be out of date until the table is updated.</div>`;
+  const bad=ORDER.filter(c=>CHECK[c]&&CHECK[c].status==='diff');
+  if(bad.length)a+=`<div class="alert bad"><b>Live check disagrees.</b> ${bad.map(c=>CC[c].code+': '+CHECK[c].text).join('. ')}. See Sources and checks.</div>`;
+  $('#alerts').innerHTML=a;
+}
+
+/* ---------- live cross-checks ---------- */
+function seq(obs){let start=null,prev=null;const ch=[];obs.forEach(([d,v])=>{if(d<SINCE){start=v;prev=v;return}if(prev===null){start=v;prev=v;return}if(Math.abs(v-prev)>1e-9){ch.push([d,v]);prev=v}});return {start,ch,last:obs[obs.length-1]}}
+function cmp(c,live){const e=CC[c],bad=[];if(Math.abs(live.start-e.start)>1e-9)bad.push(`level on 1 Jan 2025 is ${live.start.toFixed(2)}%, table has ${e.start.toFixed(2)}%`);
+  const a=live.ch.map(x=>x[1].toFixed(2)).join(' → '),b=e.ev.map(x=>x[1].toFixed(2)).join(' → ');if(a!==b)bad.push(`feed shows ${live.start.toFixed(2)} → ${a}, table shows ${e.start.toFixed(2)} → ${b}`);
+  return bad}
+async function checkBoC(){CHECK.CAD={status:'run'};try{const r=await fetch('https://www.bankofcanada.ca/valet/observations/V39079/json?start_date=2024-12-01');const j=await r.json();
+  const o=j.observations.map(x=>[x.d,parseFloat(x.V39079.v)]).filter(x=>!isNaN(x[1]));const L=seq(o);const bad=cmp('CAD',L);
+  CHECK.CAD=bad.length?{status:'diff',text:bad.join('; ')}:{status:'ok',text:`Bank of Canada Valet: ${L.ch.length} changes since Jan 2025, latest ${L.last[1].toFixed(2)}% on ${fmtD(D(L.last[0]))}.`}}catch(e){CHECK.CAD={status:'err',text:'Bank of Canada Valet API.'}}}
+async function checkECB(){CHECK.EUR={status:'run'};try{const r=await fetch('https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV?format=csvdata&startPeriod=2024-12-01');const txt=await r.text();
+  const lines=txt.trim().split(/\r?\n/);const hd=lines[0].split(',');const ti=hd.indexOf('TIME_PERIOD'),vi=hd.indexOf('OBS_VALUE');if(ti<0||vi<0)throw 0;
+  const o=lines.slice(1).map(l=>{const p=l.split(',');return [p[ti],parseFloat(p[vi])]}).filter(x=>!isNaN(x[1])).sort((a,b)=>a[0]<b[0]?-1:1);const L=seq(o);const bad=cmp('EUR',L);
+  CHECK.EUR=bad.length?{status:'diff',text:bad.join('; ')}:{status:'ok',text:`ECB data portal: ${L.ch.length} changes since Jan 2025, deposit rate ${L.last[1].toFixed(2)}% on ${fmtD(D(L.last[0]))}. Dates there are effective dates.`}}catch(e){CHECK.EUR={status:'err',text:'ECB data portal.'}}}
+async function checkFed(){CHECK.USD={status:'run'};try{const r=await fetch('https://markets.newyorkfed.org/api/rates/unsecured/effr/last/1.json');const j=await r.json();const x=j.refRates[0];const lo=x.targetRateFrom,hi=x.targetRateTo;
+  if(lo!=null&&hi!=null){const mid=(lo+hi)/2;CHECK.USD=Math.abs(mid-rateNow('USD'))<1e-9?{status:'ok',text:`New York Fed: target range ${lo.toFixed(2)}–${hi.toFixed(2)}%, effective rate ${x.percentRate.toFixed(2)}% on ${fmtD(D(x.effectiveDate))}. Current level only, not the history.`}:{status:'diff',text:`New York Fed shows a ${lo.toFixed(2)}–${hi.toFixed(2)}% target range, table has midpoint ${rateNow('USD').toFixed(3)}%`}}
+  else{const e=x.percentRate;const m=rateNow('USD');CHECK.USD=(e>m-.25&&e<m+.25)?{status:'ok',text:`New York Fed effective rate ${e.toFixed(2)}% sits inside the table's range. Current level only.`}:{status:'diff',text:`New York Fed effective rate ${e.toFixed(2)}% is outside the table's range`}}}catch(e){CHECK.USD={status:'err',text:'New York Fed rates API.'}}}
+
+/* ---------- wiring ---------- */
+function renderAll(){renderNotices();renderSqueeze();renderMatrix();renderBiasCheck();renderChips();renderPairChart();renderCandles();renderEvents();renderRank();}
+function renderCharts(){renderPairChart();renderCandles();renderPath()}
+async function boot(){
+  const [ok]=await Promise.all([loadFX(),loadRates()]);
+  fillSinceEv();renderRates();renderSources();renderAsof();renderAll();renderPath();renderStatus();
+  Promise.all([checkBoC().then(()=>{renderSources();renderStatus()}),checkECB().then(()=>{renderSources();renderStatus()}),checkFed().then(()=>{renderSources();renderStatus()})]);
+}
+function fillWin(){$('#win').innerHTML=Object.keys(WINS).filter(k=>k!=='custom'||state.since).map(k=>`<option value="${k}">${WINS[k].label}</option>`).join('');$('#win').value=state.win}
+fillWin();
+$('#win').onchange=e=>{state.win=e.target.value;renderAll()};
+function setSince(iso){if(!iso||iso<SINCE||iso>TODAY)return;state.since=iso;state.win='custom';fillWin();renderAll()}
+$('#sinceDate').onchange=e=>setSince(e.target.value);
+$('#sinceEv').onchange=e=>{if(e.target.value)setSince(e.target.value);e.target.value=''};
+function fillSinceEv(){$('#sinceEv').innerHTML='<option value="">A decision…</option>'+[...new Set(EVENTS.filter(e=>e.d<=TODAY).map(e=>e.d))].reverse().map(d=>`<option value="${d}">${fmtD(D(d))}: ${EVENTS.filter(e=>e.d===d).map(e=>CC[e.c].code+(e.bp>0?' \u25B2':' \u25BC')+Math.abs(e.bp)).join(', ')}</option>`).join('');}
+fillSinceEv();
+$('#sinceDate').min=SINCE;$('#sinceDate').max=TODAY;
+$('#modeSeg').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;state.mode=b.dataset.m;renderChips();renderPairChart()};
+$('#matrix').onclick=e=>{const b=e.target.closest('.cell');if(b)togglePair(b.dataset.p)};
+$('#pairChips').onclick=e=>{const rm=e.target.closest('[data-rm]');if(rm){togglePair(rm.dataset.rm);return}const f=e.target.closest('[data-focus]');if(f){state.focus=f.dataset.focus;renderChips();renderCandles();renderEvents()}};
+$('#ccyChips').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;const c=b.dataset.c;if(state.ccyOn.has(c)){if(state.ccyOn.size>1)state.ccyOn.delete(c)}else state.ccyOn.add(c);renderPath()};
+$('#rankTable').onclick=e=>{const s=e.target.closest('[data-sort]');if(s){const k=s.dataset.sort;state.sort=state.sort.k===k?{k,dir:-state.sort.dir}:{k,dir:k==='p'||k==='read'?1:-1};renderRank();return}const r=e.target.closest('tr[data-p]');if(r)togglePair(r.dataset.p)};
+$('#rankTable').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('tr[data-p]');if(r){e.preventDefault();togglePair(r.dataset.p)}}};
+let rz;const ro=new ResizeObserver(()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(()=>{renderCharts()})});
+ro.observe($('#pairChart'));ro.observe($('#candleChart'));ro.observe($('#pathChart'));
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{renderMatrix()});
+$('#cPair').innerHTML=PAIRS.map(x=>`<option>${x}</option>`).join('');
+$('#cPair').onchange=e=>{const x=e.target.value;if(state.sel.includes(x)){state.focus=x;renderChips();renderCandles();renderEvents()}else togglePair(x)};
+$('#asof').oninput=e=>{const i=+e.target.value;setAsof(i>=ASTEPS.length?null:ASTEPS[i])};
+$('#asofSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.a;setAsof(a==='now'?null:a==='jan25'?D(SINCE):D('2026-01-01'))};
+$('#sqSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;state.win=b.dataset.w;$('#win').value=state.win;renderAll()};
+$('#squeeze').onclick=e=>{const r=e.target.closest('.sqrow');if(r)pickPair(r.dataset.p)};
+$('#notices').onclick=e=>{const r=e.target.closest('.plink');if(r)pickPair(r.dataset.p)};
+renderNotices();try{localStorage.setItem('rd_last',TODAY)}catch(e){}renderSqueeze();renderRates();renderSources();renderStatus();renderMatrix();renderChips();renderAsof();
+boot();
+})();
+</script>
+</body>
+</html>
