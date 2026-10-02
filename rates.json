@@ -1,0 +1,237 @@
+{
+ "verified": "2026-10-01",
+ "note": "Policy rate history for the rate-differentials page. ev rows are [decision date, new rate, effective date if different]. Fed is the target-range midpoint.",
+ "banks": {
+  "USD": {
+   "start": 4.375,
+   "ev": [
+    [
+     "2025-09-17",
+     4.125,
+     "2025-09-18"
+    ],
+    [
+     "2025-10-29",
+     3.875,
+     "2025-10-30"
+    ],
+    [
+     "2025-12-10",
+     3.625,
+     "2025-12-11"
+    ],
+    [
+     "2026-09-16",
+     3.875,
+     "2026-09-17"
+    ]
+   ],
+   "next": "2026-10-28",
+   "verif": "Every date matches the Fed table. It lists effective dates, the decision is the day before."
+  },
+  "EUR": {
+   "start": 3,
+   "ev": [
+    [
+     "2025-01-30",
+     2.75,
+     "2025-02-05"
+    ],
+    [
+     "2025-03-06",
+     2.5,
+     "2025-03-12"
+    ],
+    [
+     "2025-04-17",
+     2.25,
+     "2025-04-23"
+    ],
+    [
+     "2025-06-05",
+     2,
+     "2025-06-11"
+    ],
+    [
+     "2026-06-11",
+     2.25,
+     "2026-06-17"
+    ],
+    [
+     "2026-09-10",
+     2.5,
+     "2026-09-16"
+    ]
+   ],
+   "next": "2026-10-29",
+   "verif": "Every level and effective date matches the ECB table. Decisions land six days before they take effect."
+  },
+  "GBP": {
+   "start": 4.75,
+   "ev": [
+    [
+     "2025-02-06",
+     4.5
+    ],
+    [
+     "2025-05-08",
+     4.25
+    ],
+    [
+     "2025-08-07",
+     4
+    ],
+    [
+     "2025-12-18",
+     3.75
+    ]
+   ],
+   "next": "2026-11-05",
+   "verif": "Every date matches the Bank Rate history. Six holds in 2026 so far."
+  },
+  "JPY": {
+   "start": 0.25,
+   "ev": [
+    [
+     "2025-01-24",
+     0.5
+    ],
+    [
+     "2025-12-19",
+     0.75
+    ],
+    [
+     "2026-06-16",
+     1
+    ],
+    [
+     "2026-09-18",
+     1.25,
+     "2026-09-24"
+    ]
+   ],
+   "next": "2026-10-30",
+   "nextNote": "Two-day meeting. Confirm the date on the BoJ schedule.",
+   "verif": "Sep 2026 checked against the BoJ statement, Dec 2025 and Jun 2026 against press and data providers. The Jan 2025 hike was not re-checked on the BoJ site."
+  },
+  "CHF": {
+   "start": 0.5,
+   "ev": [
+    [
+     "2025-03-20",
+     0.25
+    ],
+    [
+     "2025-06-19",
+     0
+    ]
+   ],
+   "next": "2026-12-10",
+   "verif": "Decision dates match the SNB list. The 0% level and the hold at every meeting since come from SNB releases and press."
+  },
+  "CAD": {
+   "start": 3.25,
+   "ev": [
+    [
+     "2025-01-29",
+     3
+    ],
+    [
+     "2025-03-12",
+     2.75
+    ],
+    [
+     "2025-09-17",
+     2.5
+    ],
+    [
+     "2025-10-29",
+     2.25
+    ]
+   ],
+   "next": "2026-10-28",
+   "verif": "Oct 2025 cut and seven straight holds confirmed. Earlier 2025 steps are checked against the Bank of Canada data feed on every load."
+  },
+  "AUD": {
+   "start": 4.35,
+   "ev": [
+    [
+     "2025-02-18",
+     4.1,
+     "2025-02-19"
+    ],
+    [
+     "2025-05-20",
+     3.85,
+     "2025-05-21"
+    ],
+    [
+     "2025-08-12",
+     3.6,
+     "2025-08-13"
+    ],
+    [
+     "2026-02-03",
+     3.85,
+     "2026-02-04"
+    ],
+    [
+     "2026-03-17",
+     4.1,
+     "2026-03-18"
+    ],
+    [
+     "2026-05-05",
+     4.35,
+     "2026-05-06"
+    ],
+    [
+     "2026-09-29",
+     4.6,
+     "2026-09-30"
+    ]
+   ],
+   "next": "2026-11-03",
+   "verif": "Feb and May 2025 match the RBA table. The Aug 2025 cut and the four 2026 hikes come from RBA statements and press."
+  },
+  "NZD": {
+   "start": 4.25,
+   "ev": [
+    [
+     "2025-02-19",
+     3.75
+    ],
+    [
+     "2025-04-09",
+     3.5
+    ],
+    [
+     "2025-05-28",
+     3.25
+    ],
+    [
+     "2025-08-20",
+     3
+    ],
+    [
+     "2025-10-08",
+     2.5
+    ],
+    [
+     "2025-11-26",
+     2.25
+    ],
+    [
+     "2026-07-08",
+     2.5
+    ],
+    [
+     "2026-09-02",
+     2.75
+    ]
+   ],
+   "next": "2026-10-28",
+   "verif": "Sep 2026 confirmed on the RBNZ site. Other dates come from RBNZ-linked news reports and a rate-history table."
+  }
+ }
+}
