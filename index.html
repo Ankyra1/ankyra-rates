@@ -108,6 +108,15 @@ select{font:inherit;font-size:13px;padding:6px 10px;border-radius:8px;border:1px
 .asofl b{color:var(--ink);font-weight:600}
 .cardhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;margin-bottom:6px}
 .cardhead h3{margin:0}
+details.fold{margin-top:28px;border-top:1px solid var(--hair);padding-top:12px}
+details.fold>summary{cursor:pointer;list-style:none;display:block;position:relative;padding-right:28px}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"+";position:absolute;right:4px;top:0;font-size:22px;line-height:1;color:var(--ink2)}
+details.fold[open]>summary::after{content:"\2212"}
+details.fold>summary h2{margin:0}
+details.fold>summary p{margin:4px 0 0;color:var(--ink2);font-size:14px;max-width:70ch;font-weight:400}
+details.fold>.foldbody{margin-top:14px}
+details.fold.sub{margin-top:16px}
 details.setup{margin:8px 4px 2px;font-size:13px;color:var(--ink2)}
 details.setup summary{cursor:pointer;color:var(--ink)}
 details.setup ol{margin:8px 0 4px 18px;padding:0}
@@ -253,10 +262,12 @@ footer{margin-top:48px;font-size:13px;color:var(--ink2);max-width:80ch}
       </details>
     </div>
   </div>
+  <details class="fold sub"><summary><h2>Compare several pairs</h2><p>Line chart of the selected pairs with the differential underneath.</p></summary><div class="foldbody">
   <div class="card chartcard stack">
     <div class="chips" id="pairChips"></div>
     <div class="chart" id="pairChart" role="img" aria-label="Price of the selected pairs with the rate differential underneath, and rate decisions marked"></div>
   </div>
+  </div></details>
 </section>
 
 <section id="squeeze">
@@ -283,13 +294,10 @@ footer{margin-top:48px;font-size:13px;color:var(--ink2);max-width:80ch}
 
 
 
-<section id="events">
-  <div class="sec-head">
-    <div><h2>Around each decision</h2><p id="evSub"></p></div>
-  </div>
+<details class="fold" id="events"><summary><h2>Around each decision</h2><p id="evSub"></p></summary><div class="foldbody">
   <div class="card tablewrap"><table class="dt" id="evTable"></table></div>
   <p class="note">Price moves are measured from the daily ECB reference fixing on the decision date. That fixing is at 14:15 CET, so decisions announced later in the day (the Fed, BoC) mostly show up in the next day's number, and short windows are noisy. Read the 20-day column with that in mind.</p>
-</section>
+</div></details>
 
 <section id="ranking">
   <div class="sec-head">
@@ -298,23 +306,17 @@ footer{margin-top:48px;font-size:13px;color:var(--ink2);max-width:80ch}
   <div class="card tablewrap"><table class="dt" id="rankTable"></table></div>
 </section>
 
-<section id="paths">
-  <div class="sec-head">
-    <div><h2>Policy rate paths</h2><p>Each line steps on the day of a decision. Turn currencies on and off to compare.</p></div>
-  </div>
+<details class="fold" id="paths"><summary><h2>Policy rate paths</h2><p>Each line steps on the day of a decision. Turn currencies on and off to compare.</p></summary><div class="foldbody">
   <div class="card chartcard">
     <div class="chips" id="ccyChips"></div>
     <div class="chart" id="pathChart" role="img" aria-label="Step chart of the eight policy rates since January 2025"></div>
   </div>
-</section>
+</div></details>
 
-<section id="sources">
-  <div class="sec-head">
-    <div><h2>Sources and checks</h2><p>The rate history is a verified table taken from each central bank's own release. Where a bank publishes a free data feed, the page re-checks the table against it every time it loads.</p></div>
-  </div>
+<details class="fold" id="sources"><summary><h2>Sources and checks</h2><p>The rate history is a verified table taken from each central bank's own release. Where a bank publishes a free data feed, the page re-checks the table against it every time it loads.</p></summary><div class="foldbody">
   <div class="card tablewrap"><table class="dt" id="srcTable"></table></div>
   <p class="note">Spot rates are the daily ECB reference rates from Frankfurter, so each day is one fixing, not live ticks. Rates only change at scheduled decisions, so the table needs updating after each meeting. If a meeting date has passed and the table has not been re-verified, a notice appears at the top of the page.</p>
-</section>
+</div></details>
 
 <footer>
   Conventions: the Fed is the midpoint of its target range, the ECB is the deposit facility rate, the BoJ is the overnight call rate target. Decision dates are announcement dates. The ECB and RBA apply changes a few days later, and the Fed and RBA table dates are effective dates.
