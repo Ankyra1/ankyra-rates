@@ -14,6 +14,7 @@
   --neu:#f0efec; --pos:#2a78d6; --neg:#e34948; --ok:#006300; --warn-bg:#fff4d6; --warn-ink:#5a4100; --bad-bg:#fde8e8; --bad-ink:#7a1f1f;
   --c-USD:#2a78d6; --c-EUR:#eb6834; --c-GBP:#1baf7a; --c-JPY:#eda100; --c-CHF:#e87ba4; --c-CAD:#008300; --c-AUD:#4a3aa7; --c-NZD:#e34948;
   --p1:#2a78d6; --p2:#eb6834; --p3:#1baf7a;
+  --brand-gold:#b8923f; --brand-gold2:#e4c477;
   --font: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark){
@@ -42,6 +43,31 @@ h1{font:700 clamp(30px,5vw,46px)/1.05 var(--font);letter-spacing:-.02em;margin:0
 h2{font:600 19px/1.25 var(--font);letter-spacing:-.005em;margin:0}
 .lede{margin:0;max-width:62ch;color:var(--ink2);font-size:16px}
 section{margin-top:40px}
+.themerow{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 16px}
+.brand{margin:0}
+.brand a{display:inline-block;line-height:0}
+.brandmark{display:block;height:72px;width:auto}
+@media(max-width:520px){.brandmark{height:56px}.themerow{align-items:flex-start}}
+.pagehead::after{content:"";display:block;height:2px;margin-top:24px;max-width:260px;
+  background:linear-gradient(90deg,var(--brand-gold) 0%,var(--brand-gold2) 35%,rgba(184,146,63,0) 100%)}
+.mapcard{padding:20px;display:flex;justify-content:center;background:var(--surf)}
+.mapimg{display:block;width:100%;max-width:440px;height:auto;border-radius:8px}
+.boardh3{display:flex;align-items:center;gap:8px;margin:0}
+.infobtn{width:20px;height:20px;border-radius:50%;border:1px solid var(--axis);background:var(--surf);color:var(--ink2);font-size:12px;font-weight:700;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.infobtn:hover{border-color:var(--ink);color:var(--ink)}
+dialog.helpdlg{border:1px solid var(--hair);border-radius:12px;padding:0;max-width:380px;width:calc(100% - 32px);color:var(--ink);background:var(--surf)}
+dialog.helpdlg::backdrop{background:rgba(0,0,0,.45)}
+.dlghead{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 0}
+.dlghead h4{margin:0;font:700 16px/1.3 var(--font)}
+.dlgclose{border:0;background:none;color:var(--ink2);font-size:20px;line-height:1;cursor:pointer;padding:4px}
+.dlgclose:hover{color:var(--ink)}
+.dlgbody{padding:10px 16px 18px}
+.hrow{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--grid)}
+.hrow:first-child{border-top:0}
+.hsw{flex:none;width:30px;text-align:center;font-weight:700;font-size:15px;padding-top:1px}
+.hsw i{display:inline-block;width:15px;height:15px;border-radius:3px;background:var(--axis)}
+.hrow p{margin:0;font-size:13.5px;color:var(--ink2);line-height:1.45}
+.hrow b{color:var(--ink)}
 .sec-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;margin-bottom:14px}
 .sec-head p{margin:4px 0 0;color:var(--ink2);font-size:14px;max-width:70ch}
 .card{background:var(--surf);border:1px solid var(--hair);border-radius:10px}
@@ -98,6 +124,12 @@ select{font:inherit;font-size:13px;padding:6px 10px;border-radius:8px;border:1px
 .mx .cell{position:relative;width:100%;height:100%;border:0;border-radius:5px;cursor:pointer;font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums}
 .mx .cell:hover{box-shadow:0 0 0 2px var(--axis)}
 .mx .cell.sel{box-shadow:0 0 0 2px var(--ink);font-weight:700}
+.mx .cell.fading{box-shadow:0 0 0 2px var(--warn-ink)}
+.mx .cell.fading:hover{box-shadow:0 0 0 2px var(--warn-ink)}
+.mx .cell.sel.fading{box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--warn-ink)}
+.mx .cell .bz.fade{color:var(--warn-ink);font-weight:700;font-size:13px;animation:biasFadePulse 1.6s ease-in-out infinite}
+@keyframes biasFadePulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media(prefers-reduced-motion: reduce){.mx .cell .bz.fade{animation:none}}
 .mx .cell .pk{position:absolute;top:3px;left:3px;width:7px;height:7px;border-radius:50%;background:var(--pk)}
 .mx .dot{width:8px;height:8px;margin-right:4px}
 @media(max-width:520px){.mx th{font-size:10.5px}.mx .dot{display:none}.mx th.r{width:34px}}
@@ -195,7 +227,11 @@ footer{margin-top:48px;font-size:13px;color:var(--ink2);max-width:80ch}
 <body>
 <main class="wrap">
 
-<header>
+<header class="pagehead">
+  <div class="themerow">
+    <div class="brand"><a href="https://ankyra.trade" aria-label="Ankyra"><img class="brandmark" src="assets/cash-flow-logo.webp" alt="Ankyra" width="140" height="126" loading="eager" decoding="async"></a></div>
+    <div class="seg" id="themeSeg" role="group" aria-label="Color theme"><button data-t="light">Light</button><button data-t="dark">Dark</button></div>
+  </div>
   <h1>Rate differentials</h1>
   <p class="lede">Policy rates of the eight central banks behind the major pairs, every decision since January 2025, and how all 28 pairs moved around them.</p>
   <div class="status" id="status"></div>
@@ -225,6 +261,15 @@ footer{margin-top:48px;font-size:13px;color:var(--ink2);max-width:80ch}
   </dl>
 </details>
 
+<section id="map">
+  <div class="sec-head">
+    <div><h2>The 7 majors, 21 crosses, 28 pairs</h2><p>Every pair on this page is built from these eight currencies: seven paired directly against the US dollar (the majors), and twenty-one paired against each other (the crosses).</p></div>
+  </div>
+  <div class="card mapcard">
+    <img class="mapimg" src="assets/fx-majors-crosses.webp" alt="Diagram of FX majors and crosses. USD sits at the center with solid lines to the seven major pairs: EUR/USD, GBP/USD, AUD/USD, NZD/USD, USD/CAD, USD/CHF and USD/JPY. Dashed lines connect the remaining 21 cross pairs among EUR, GBP, AUD, NZD, CAD, CHF and JPY. 7 majors plus 21 crosses equals 28 pairs total." width="1000" height="1250" loading="lazy" decoding="async">
+  </div>
+</section>
+
 <section id="workspace">
   <div class="sec-head">
     <div><h2>Pairs against the rate differential</h2><p>Pick up to three pairs on the board. Each cell shows the differential (base rate minus quote rate) and the rate bias: ▲ bullish, ▼ bearish. Lines on the charts mark every decision by either bank.</p></div>
@@ -235,7 +280,7 @@ footer{margin-top:48px;font-size:13px;color:var(--ink2);max-width:80ch}
   </div>
   <div class="ws">
     <div class="card board">
-      <h3>Pair board</h3>
+      <div class="boardh3"><h3>Pair board</h3><button class="infobtn" id="boardHelpBtn" type="button" aria-haspopup="dialog" aria-label="How to read this board">?</button></div>
       <p class="hint">Each cell is base minus quote, in percentage points. Click to add or remove a pair.</p>
       <div class="tctl">
         <div class="seg" id="asofSeg" role="group" aria-label="Board date presets"><button data-a="jan25">Jan 2025</button><button data-a="jan26">Jan 2026</button><button data-a="now" aria-pressed="true">Now</button></div>
@@ -244,9 +289,21 @@ footer{margin-top:48px;font-size:13px;color:var(--ink2);max-width:80ch}
       </div>
       <div id="matrix"></div>
       <div class="legendbar"><span>Quote pays more</span><i></i><span>Base pays more</span></div>
-      <div class="biaskey"><b>Rate bias</b> ▲ bullish (buy the pair), ▼ bearish (sell the pair). Hollow △ ▽ means the differential is contracting, so the bias is fading. No arrow means neutral.</div>
+      <div class="biaskey"><b>Rate bias</b> ▲ bullish (buy the pair), ▼ bearish (sell the pair). Hollow △ ▽ means the differential is contracting, so the bias is fading — those pairs also get an amber ring and a pulsing arrow. No arrow means neutral.</div>
       <p class="biascheck" id="biasCheck"></p>
     </div>
+    <dialog class="helpdlg" id="boardHelpDlg">
+      <div class="dlghead"><h4>How to read the board</h4><button class="dlgclose" id="boardHelpClose" type="button" aria-label="Close">&times;</button></div>
+      <div class="dlgbody">
+        <div class="hrow"><div class="hsw"><i></i></div><p><b>Each square is a pair</b> — its row currency vs. its column currency. The number is just how far apart their interest rates are.</p></div>
+        <div class="hrow"><div class="hsw"><i style="background:var(--pos)"></i></div><p><b>Blue = the row currency pays more</b> to hold. That's the bullish side — the carry trade favors buying this pair.</p></div>
+        <div class="hrow"><div class="hsw"><i style="background:var(--neg)"></i></div><p><b>Red = the column currency pays more.</b> Bearish — the carry trade favors selling.</p></div>
+        <div class="hrow"><div class="hsw">▲▼</div><p><b>Solid arrow = the lean is holding steady,</b> not just present but not fading either.</p></div>
+        <div class="hrow"><div class="hsw">△▽</div><p><b>Hollow arrow = same direction, losing steam</b> — the gap's been shrinking, so whoever's holding that trade for the carry has less reason to by the day. These pairs get an amber ring and a pulsing arrow too, since that's often when squeezed holders start unloading back into the market — worth watching closely.</p></div>
+        <div class="hrow"><div class="hsw">·</div><p><b>No arrow = a toss-up,</b> the two rates are close enough that there's no real lean either way.</p></div>
+        <div class="hrow"><div class="hsw">👆</div><p><b>Click any square</b> to chart that pair below (up to three at once).</p></div>
+      </div>
+    </dialog>
     <div class="card chartcard">
       <div class="cardhead"><h3>Daily candles</h3><label class="muted" style="font-size:13px">Pair <select id="cPair"></select></label></div>
       <div class="chart" id="candleChart" role="img" aria-label="Daily candlestick chart of the focused pair with its rate differential underneath and rate decisions marked"></div>
@@ -528,7 +585,7 @@ function renderMatrix(){
       const d=ra(b)-ra(q),dn=rateNow(b)-rateNow(q),p=b+'/'+q,t=Math.min(1,Math.abs(d)/4.6);
       const bg=mix(neu,d>=0?pos:neg,Math.pow(t,.8)*.92),fg=lum(bg)>.36?'#0b0b0b':'#ffffff';
       const sel=state.sel.includes(p);const bi=biasOf(b,q);
-      h+=`<td><button class="cell${sel?' sel':''}" data-p="${p}" style="background:rgb(${bg});color:${fg};${sel?'--pk:'+slotVar(state.slot[p]):''}" aria-pressed="${sel}" aria-label="${p}: base minus quote ${sg(d)} points. Rate bias ${bi.label}. ${sel?'Selected.':''}" title="${p}  ${sg(d)} pp (${CC[b].code} ${ra(b).toFixed(2)}% vs ${CC[q].code} ${ra(q).toFixed(2)}%)${state.asof==null?'':'. Now '+sg(dn)+' pp'}. Rate bias: ${bi.label}">${sel?'<span class="pk"></span>':''}${bi.glyph?`<span class="bz" aria-hidden="true">${bi.glyph}</span>`:''}${sg(d,dp)}</button></td>`;
+      h+=`<td><button class="cell${sel?' sel':''}${bi.fade?' fading':''}" data-p="${p}" style="background:rgb(${bg});color:${fg};${sel?'--pk:'+slotVar(state.slot[p]):''}" aria-pressed="${sel}" aria-label="${p}: base minus quote ${sg(d)} points. Rate bias ${bi.label}. ${sel?'Selected.':''}" title="${p}  ${sg(d)} pp (${CC[b].code} ${ra(b).toFixed(2)}% vs ${CC[q].code} ${ra(q).toFixed(2)}%)${state.asof==null?'':'. Now '+sg(dn)+' pp'}. Rate bias: ${bi.label}">${sel?'<span class="pk"></span>':''}${bi.glyph?`<span class="bz${bi.fade?' fade':''}" aria-hidden="true">${bi.glyph}</span>`:''}${sg(d,dp)}</button></td>`;
     });
     h+='</tr>';
   });
@@ -858,6 +915,9 @@ function fillSinceEv(){$('#sinceEv').innerHTML='<option value="">A decision…</
 fillSinceEv();
 $('#sinceDate').min=SINCE;$('#sinceDate').max=TODAY;
 $('#modeSeg').onclick=e=>{const b=e.target.closest('button');if(!b||b.disabled)return;state.mode=b.dataset.m;renderChips();renderPairChart()};
+$('#boardHelpBtn').onclick=()=>{try{$('#boardHelpDlg').showModal()}catch(e){}};
+$('#boardHelpClose').onclick=()=>$('#boardHelpDlg').close();
+$('#boardHelpDlg').addEventListener('click',e=>{if(e.target===$('#boardHelpDlg'))$('#boardHelpDlg').close()});
 $('#matrix').onclick=e=>{const b=e.target.closest('.cell');if(b)togglePair(b.dataset.p)};
 $('#pairChips').onclick=e=>{const rm=e.target.closest('[data-rm]');if(rm){togglePair(rm.dataset.rm);return}const f=e.target.closest('[data-focus]');if(f){state.focus=f.dataset.focus;renderChips();renderCandles();renderEvents()}};
 $('#ccyChips').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;const c=b.dataset.c;if(state.ccyOn.has(c)){if(state.ccyOn.size>1)state.ccyOn.delete(c)}else state.ccyOn.add(c);renderPath()};
@@ -865,7 +925,25 @@ $('#rankTable').onclick=e=>{const s=e.target.closest('[data-sort]');if(s){const 
 $('#rankTable').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const r=e.target.closest('tr[data-p]');if(r){e.preventDefault();togglePair(r.dataset.p)}}};
 let rz;const ro=new ResizeObserver(()=>{cancelAnimationFrame(rz);rz=requestAnimationFrame(()=>{renderCharts()})});
 ro.observe($('#pairChart'));ro.observe($('#candleChart'));ro.observe($('#pathChart'));
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{renderMatrix()});
+/* ---------- theme toggle (data-theme attr already wired into every CSS var block above; this just drives it) ---------- */
+const THEME_KEY='rd_theme';
+function paintThemeSeg(){
+  let saved=null;try{saved=localStorage.getItem(THEME_KEY)}catch(e){}
+  const eff=saved==='light'||saved==='dark'?saved:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  $('#themeSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===eff)));
+}
+$('#themeSeg').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;const t=b.dataset.t;
+  document.documentElement.setAttribute('data-theme',t);
+  try{localStorage.setItem(THEME_KEY,t)}catch(err){}
+  paintThemeSeg();renderMatrix();
+};
+(function initTheme(){
+  let saved=null;try{saved=localStorage.getItem(THEME_KEY)}catch(e){}
+  if(saved==='light'||saved==='dark')document.documentElement.setAttribute('data-theme',saved);
+  paintThemeSeg();
+})();
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{renderMatrix();paintThemeSeg()});
 $('#cPair').innerHTML=PAIRS.map(x=>`<option>${x}</option>`).join('');
 $('#cPair').onchange=e=>{const x=e.target.value;if(state.sel.includes(x)){state.focus=x;renderChips();renderCandles();renderEvents()}else togglePair(x)};
 $('#asof').oninput=e=>{const i=+e.target.value;setAsof(i>=ASTEPS.length?null:ASTEPS[i])};
